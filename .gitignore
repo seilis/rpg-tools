@@ -1,2 +1,28 @@
 *.sw[opn]
 ~*
+
+# Autotools
+*.log
+compile
+configure
+depcomp
+install-sh
+missing
+stamp-h1
+autom4te.cache
+aclocal.m4
+Makefile.in
+cpp/Makefile
+cpp/config.h
+*.in
+config.status
+.deps
+.dirstamp
+
+# Build Products
+cpp/rpgmap
+*.o
+*.la
+*.a
+*.so
+*.pyc
