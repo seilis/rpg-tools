@@ -26,3 +26,10 @@ cpp/rpgmap
 *.a
 *.so
 *.pyc
+
+# Rust/Cargo products
+Cargo.lock
+target/
+
+# Testing output
+example.png
