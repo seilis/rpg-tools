@@ -1,23 +1,34 @@
+# Generic
+*.log
+
+# Vim temps/backups
 *.sw[opn]
 ~*
+*~
 
 # Autotools
-*.log
-compile
-configure
-depcomp
-install-sh
-missing
-stamp-h1
-autom4te.cache
-aclocal.m4
-Makefile.in
-cpp/Makefile
-cpp/config.h
-*.in
-config.status
 .deps
 .dirstamp
+/cpp/Makefile
+/cpp/Makefile.in
+/cpp/aclocal.m4
+/cpp/autom4te.cache
+/cpp/compile
+/cpp/config.guess
+/cpp/config.h
+/cpp/config.h.in
+/cpp/config.status
+/cpp/config.sub
+/cpp/configure
+/cpp/depcomp
+/cpp/install-sh
+/cpp/libtool
+/cpp/ltmain.sh
+/cpp/m4/libtool.m4
+/cpp/m4/lt*
+/cpp/missing
+/cpp/stamp-h1
+
 
 # Build Products
 cpp/rpgmap

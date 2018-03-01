@@ -1,9 +1,9 @@
 # Make sub-directory compiling nice
 AUTOMAKE_OPTIONS = subdir-objects
-ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
+ACLOCAL_AMFLAGS = -Im4
 
-# Enable C++11 support on all platforms
-AM_CXXFLAGS = --std=c++11
+# Enable C++17 support on all platforms
+AM_CXXFLAGS = --std=c++17 -O2 -Wall -Wextra
 
 # Global flags
 AM_CPPFLAGS = $(DEPS_CFLAGS) $(DEPS_CXXFLAGS)
@@ -19,4 +19,4 @@ rpgmap_SOURCES = \
 
 # Note temporary addition of a hard-coded Boost library until I figure 
 # out the best way to include it properly.
-rpgmap_LDADD = $(DEPS_LIBS) -lboost_program_options
+rpgmap_LDADD = $(DEPS_LIBS) -lboost_program_options $(AM_LDFLAGS)
