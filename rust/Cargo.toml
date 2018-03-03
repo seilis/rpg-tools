@@ -1,0 +1,12 @@
+[package]
+name = "rpgmap"
+version = "0.0.1-alpha"
+authors = ["Aaron Seilis <aaron.seilis@seilis.ca>"]
+
+[dependencies]
+rand = "0.4"
+image = "0.18.0"
+
+[[bin]]
+name = "rpgmap"
+path = "src/rpgmap.rs"
