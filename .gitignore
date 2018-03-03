@@ -29,14 +29,13 @@
 /cpp/missing
 /cpp/stamp-h1
 
-
 # Build Products
-cpp/rpgmap
-*.o
-*.la
 *.a
-*.so
+*.la
+*.o
 *.pyc
+*.so
+cpp/rpgmap
 
 # Rust/Cargo products
 Cargo.lock
