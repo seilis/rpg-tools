@@ -38,6 +38,10 @@ impl GridMap {
 
     /// Set the entrance
     pub fn place_entrance(&mut self, (x, y): (usize, usize)) {
+        if x >= self.xmax || y >= self.ymax {
+            panic!("Tried to place an entrance outside the bounds of the map");
+        }
+
         self.cells[x][y].area = AreaType::Entrance;
     }
 
@@ -316,7 +320,7 @@ impl GridMap {
         proc_queue.push_back((i, j));
 
         // Mask to make sure we don't revisit rooms
-        let mut visited = vec![false; (self.xmax+1)*(self.ymax+1)];
+        let mut visited = vec![false; (self.xmax)*(self.ymax)];
 
         while proc_queue.len() > 0 {
             // Remove a room from the queue and unpack the values
