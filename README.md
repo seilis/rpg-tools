@@ -11,6 +11,7 @@ these languages.
 Currently, the Rust implementation is the fastest.
 
 Example maps look like this:
+
 ![Example halls map](doc/images/halls_60x60.png)
 
 # Install
