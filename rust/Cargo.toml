@@ -4,6 +4,7 @@ version = "0.0.1-alpha"
 authors = ["Aaron Seilis <aaron.seilis@seilis.ca>"]
 
 [dependencies]
+clap = "2.32"
 rand = "0.4"
 image = "0.18.0"
 
