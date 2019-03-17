@@ -54,11 +54,16 @@ fn main() {
 
     let mut map = GridMap::new(width, height);
 
-    map.place_room((width/2-1, height/2-1), (width/2+1, height/2+1));
-    map.place_entrance((width/2, height/2));
+    if style == "halls" {
 
-    for _ in 0..30 {
-        map.place_random_room(10, true);
+        map.place_room((width/2-1, height/2-1), (width/2+1, height/2+1));
+        map.place_entrance((width/2, height/2));
+
+        for _ in 0..30 {
+            map.place_random_room(10, true);
+        }
+    } else if style == "cave" {
+        map.generate_cave(4, 50);
     }
 
 
