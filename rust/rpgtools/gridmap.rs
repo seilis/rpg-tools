@@ -36,13 +36,26 @@ impl GridMap {
         }
     }
 
-    /// Set the entrance
+    /// Set the entrance at a particular location. The cell at this location
+    /// will be marked as having the entrance area type. Typcially this will
+    /// be coloured differently on a map.
     pub fn place_entrance(&mut self, (x, y): (usize, usize)) {
         if x >= self.xmax || y >= self.ymax {
             panic!("Tried to place an entrance outside the bounds of the map");
         }
 
         self.cells[x][y].area = AreaType::Entrance;
+    }
+
+    /// Similar to place entrance, however it starts with the coordinates and
+    /// finds the nearest spot that is already a "room". This allows entrances
+    /// to be placed in non-deterministic generators, such as caves.
+    pub fn place_entrance_near(&mut self, (x, y): (usize, usize)) -> Result<(), &'static str> {
+        if x >= self.xmax || y >= self.ymax {
+            return Err("asked for an entrance outside map boundaries");
+        }
+
+        Ok(())
     }
 
     /// Set a room
@@ -105,20 +118,21 @@ impl GridMap {
     }
 
     /// Find the nearest connected cell to the cell specified
-    pub fn find_nearest_connected(&self, (x, y): (usize, usize)) -> Option<(usize, usize)> {
-        let mut rooms = Vec::<(usize,usize)>::new();
+    fn find_nearest_connected(&self, (x, y): (usize, usize)) -> Option<(usize, usize)> {
+        self.find_by((x, y), 
+                     &|cell: &GridCell| -> bool {cell.is_room()})
+    }
+
+    /// Find a cell with an arbitrary condition. This funciton takes a starting
+    /// point and searches for nearby cells that satisfy condition 'cond'. The
+    /// condition is passed in in the form of a function that takes a gridcell
+    /// and outputs a result containing a boolean stating whether the match has
+    /// been made or not.
+    fn find_by<F>(&self, (x, y): (usize, usize), cond: &F) -> Option<(usize, usize)>
+    where F: Fn(&GridCell) -> bool {
+        let mut rooms = Vec::<(usize, usize)>::new();
         let mut found = false;
         let mut radius: usize = 0;
-
-        if x >= self.xmax || y >= self.ymax {
-            return None;
-        }
-
-        // Do an early check that the origin isn't a room. If it is, just return
-        // it directly.
-        if self.cells[x][y].is_room() {
-            return Some((x, y));
-        }
 
         while !found {
             radius += 1; // Increase search radius every loop
@@ -134,40 +148,31 @@ impl GridMap {
                 return None
             }
 
-            // Scan bottom x
+            // Scan horizontal neighbours
             for i in xmin .. xmax+1 {
-                if self.cells[i][ymin].is_room() {
+                if cond(&self.cells[i][ymin]) {
                     rooms.push((i, ymin));
                     found = true;
                 }
-            }
-
-            // Scan top x
-            for i in xmin .. xmax+1 {
-                if self.cells[i][ymax].is_room() {
+                if cond(&self.cells[i][ymax]) {
                     rooms.push((i, ymax));
                     found = true;
                 }
             }
 
-            // Scan left y
+            // Scan virtical neighbours
             for j in ymin .. ymax+1 {
-                if self.cells[xmin][j].is_room() {
+                if cond(&self.cells[xmin][j]) {
                     rooms.push((xmin, j));
                     found = true;
                 }
-            }
-
-            // Scan right y
-            for j in ymin .. ymax+1 {
-                if self.cells[xmax][j].is_room() {
+                if cond(&self.cells[xmax][j]) {
                     rooms.push((xmax, j));
                     found = true;
                 }
             }
         }
 
-        // Finished our search loop. Now return a random room
         if rooms.len() > 0 {
             let mut rng = thread_rng();
             // This is probably the most complicated expression I've written in Rust
@@ -183,6 +188,7 @@ impl GridMap {
             None
         }
     }
+
 
     /// Generate random cells with a biasing towards more/less rooms. Limit is a value
     /// between 1 and 100. This limit sets the chance that the cells are a room.
