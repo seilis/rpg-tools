@@ -55,6 +55,10 @@ impl GridMap {
             return Err("asked for an entrance outside map boundaries");
         }
 
+        let (x, y) = self.find_by((x, y),
+                                  &|cell: &GridCell| -> bool {cell.is_room()}).unwrap();
+
+        self.place_entrance((x,y));
         Ok(())
     }
 
@@ -119,7 +123,7 @@ impl GridMap {
 
     /// Find the nearest connected cell to the cell specified
     fn find_nearest_connected(&self, (x, y): (usize, usize)) -> Option<(usize, usize)> {
-        self.find_by((x, y), 
+        self.find_by((x, y),
                      &|cell: &GridCell| -> bool {cell.is_room()})
     }
 
@@ -400,7 +404,7 @@ impl GridMap {
         // Allocate enough pixels to hold the image. Note that the encode()
         // function used below requires this to be a linear array.
         let mut pixels = vec![0; (self.xmax)*(self.ymax)*(scale*scale) as usize];
-                           
+
         // Loop through all of our cells
         for x in 0 .. self.xmax {
             for y in 0 .. self.ymax {

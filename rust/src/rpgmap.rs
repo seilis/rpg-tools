@@ -48,14 +48,16 @@ fn main() {
                            .help("The style of map to generate"))
                       .get_matches();
 
+    // Unpack our arguments
     let style = cli.value_of("map-style").unwrap();
     let width: usize = cli.value_of("width").unwrap().parse().unwrap();
     let height: usize = cli.value_of("height").unwrap().parse().unwrap();
 
+    // Initialize our map
     let mut map = GridMap::new(width, height);
 
+    // Build map based on map type
     if style == "halls" {
-
         map.place_room((width/2-1, height/2-1), (width/2+1, height/2+1));
         map.place_entrance((width/2, height/2));
 
@@ -64,6 +66,7 @@ fn main() {
         }
     } else if style == "cave" {
         map.generate_cave(4, 50);
+        map.place_entrance_near((width/2, height/2)).expect("width/height is outside of map");
     }
 
 
