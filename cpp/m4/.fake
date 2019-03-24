@@ -1,3 +1,0 @@
-This file exists so that the directory is non-empty in Git. This is a
-workaround for aclocal complaining that the m4 directory doesn't exist;
-however, I don't have anything useful that I want to commit here.
