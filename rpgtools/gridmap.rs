@@ -5,8 +5,8 @@ use std::fs::File;
 
 // Extern crates
 extern crate rand;
-use rand::{seq, thread_rng, Rng};
-use rand::distributions::{IndependentSample, Range};
+use rand::{thread_rng, Rng};
+use rand::prelude::*;
 
 extern crate image;
 use image::ColorType;
@@ -177,17 +177,13 @@ impl GridMap {
             }
         }
 
-        if rooms.len() > 0 {
-            let mut rng = thread_rng();
-            // This is probably the most complicated expression I've written in Rust
-            // so far, so I'll just make the note here about what's happening.
-            // seq::sample_iter() takes a random-number generator, an iterable and
-            // the number of items you want out of the iterable. It returns an Option
-            // so I need to unpack it. I have already checked that the vector has
-            // a non-zero length so this should always return something. Lastly,
-            // the return type is a Vec so I take the first index, since I know
-            // that I only requested one.
-            Some(seq::sample_iter(&mut rng, rooms, 1).unwrap()[0])
+        // Now pick a random room
+        let mut rng = thread_rng();
+        // If we found a room then we need to make a copy of the value
+        // that's found there. x.choose() returns a reference and not
+        // the value itself.
+        if let Some(idx) = rooms.choose(&mut rng) {
+            Some(idx.clone())
         } else {
             None
         }
@@ -199,10 +195,9 @@ impl GridMap {
     /// Higher limit means fewer rooms.
     pub fn generate_random_cells(&mut self, limit: i64) {
         let mut rng = thread_rng();
-        let between = Range::new(1, 100);
         for i in 0 .. self.xmax {
             for j in 0 .. self.ymax {
-                let val = between.ind_sample(&mut rng);
+                let val = rng.gen_range(1, 100);
                 if val > limit {
                     self.cells[i][j].area = AreaType::Room;
                 } else {
