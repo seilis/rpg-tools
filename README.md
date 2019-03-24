@@ -1,14 +1,14 @@
-# RPG Map
-A simple RPG map-maker program.
+# RPG Tools
+Simple RPG helper tools for generating content for tabletop role-playing games. Currently rpgmap is the only available tool but more are planned:
+* Non-player character (NPC) generator
+* Town generator
+* World-map generator
+* ... (ideas welcome)
 
-rpgmap is a simple grid-based RPG map-maker program.
+This program currently has 2 implementations: a primary one in Rust and a secondary one in Python. Initially, this was an implementation test to compare speed and code size. This is slowly going to migrate into an implementation in Rust and a Python wrapper library.
 
-This program currently has 3 implementations: one in C++,
-one in Python and one in Rust. I did this mostly as a test
-to see how similar the code would be when implementing using
-these languages.
-
-Currently, the Rust implementation is the fastest.
+## RPG Map
+rpgmap is a grid-based map generator. This is the primary tool available right now.
 
 Example maps look like this:
 
@@ -18,7 +18,6 @@ Example maps look like this:
 ## Rust
 Make sure that you have the Rust compiler and cargo installed.
 ```
-cd rust
 cargo build --release
 ./target/release/rpgmap --help
 ```
