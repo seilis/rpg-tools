@@ -1,7 +1,14 @@
 [package]
-name = "rpgmap"
-version = "0.0.1-alpha"
+name = "rpgtools"
+version = "0.2.0-alpha"
 authors = ["Aaron Seilis <aaron.seilis@seilis.ca>"]
+edition = "2018"
+description = "Collection of utilities to help run tabletop role-playing games"
+repository = "https://github.com/seilis/rpg-tools"
+readme = "README.md"
+keywords = ["rpg", "rpg-tool", "role-playing-game", "tabletop-rpgs"]
+categories = ["games"]
+license-file = "LICENSE"
 
 [dependencies]
 clap = "2.32"
