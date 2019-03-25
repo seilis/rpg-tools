@@ -3,7 +3,7 @@
 // Program for making simple RPG maps. This is the Rust language implementation.
 
 extern crate rpgtools;
-use rpgtools::GridMap;
+use rpgtools::map::GridMap;
 
 extern crate clap;
 use clap::{Arg, App};

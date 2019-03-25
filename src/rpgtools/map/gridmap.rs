@@ -16,8 +16,8 @@ use image::png::PNGEncoder;
 mod gridcell;
 use gridcell::{GridCell, AreaType};
 
-pub mod route;
-use route::RouteMethod;
+// Need RouteMethod from rpgmap::route
+use super::route::RouteMethod;
 
 #[derive(Clone, Debug)]
 pub struct GridMap {

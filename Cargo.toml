@@ -17,8 +17,8 @@ image = "0.21"
 
 [[bin]]
 name = "rpgmap"
-path = "src/rpgmap.rs"
+path = "src/bin/rpgmap.rs"
 
 [lib]
 name = "rpgtools"
-path = "rpgtools/gridmap.rs"
+path = "src/rpgtools/lib.rs"
