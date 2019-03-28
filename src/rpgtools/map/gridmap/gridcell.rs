@@ -76,3 +76,38 @@ impl GridCell {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let cell = GridCell::new();
+        assert_eq!(AreaType::Nothing, cell.area);
+    }
+
+    #[test]
+    fn is_empty() {
+        let mut cell = GridCell::new();
+        // Do checks
+        cell.area = AreaType::Nothing;
+        assert_eq!(true, cell.is_empty());
+        cell.area = AreaType::Entrance;
+        assert_eq!(false, cell.is_empty());
+        cell.area = AreaType::Room;
+        assert_eq!(false, cell.is_empty());
+    }
+
+    #[test]
+    fn is_room() {
+        let mut cell = GridCell::new();
+        // Do checks
+        cell.area = AreaType::Nothing;
+        assert_eq!(false, cell.is_room());
+        cell.area = AreaType::Entrance;
+        assert_eq!(true, cell.is_room());
+        cell.area = AreaType::Room;
+        assert_eq!(true, cell.is_room());
+    }
+}
