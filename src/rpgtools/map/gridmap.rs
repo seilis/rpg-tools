@@ -2,6 +2,7 @@
 use std::cmp;
 use std::collections::VecDeque;
 use std::fs::File;
+use std::collections::HashSet;
 
 // Extern crates
 extern crate rand;
@@ -15,6 +16,9 @@ use image::png::PNGEncoder;
 // Local modules
 mod gridcell;
 use gridcell::{GridCell, AreaType};
+
+mod gridroom;
+use gridroom::{GridRoom};
 
 // Need RouteMethod from rpgmap::route
 use super::route::RouteMethod;
@@ -80,9 +84,10 @@ impl GridMap {
     }
 
     /// Place a room by setting the origin and width/height
-    /// # Arguments:
-    ///     (x, y) -> The origin of the room. This will be a corner.
-    ///     (w, h) -> Width/Height of the room. Note, they're isize because
+    ///
+    /// Arguments:
+    ///  *   (x, y) -> The origin of the room. This will be a corner.
+    ///  *   (w, h) -> Width/Height of the room. Note, they're isize because
     ///               you can specify the w/h to be left OR right of the origin
     ///               and up OR down, respectively.
     pub fn place_room_dimensions(&mut self, (x, y): (usize, usize), (w, h): (isize, isize)) {
@@ -495,5 +500,98 @@ impl GridMap {
         // encode() method. At the moment, we just need a grayscale image.
         encoder.encode(&pixels, row_length as u32, num_rows as u32, ColorType::Gray(8))?;
         Ok(()) // Finished!
+    }
+
+    /// Partition the map into groups of cells, called Rooms.
+    ///
+    /// The 'rooms' are just collections of cells of the same type, so there is
+    /// at least one room that contains the walls/Nothing cells. These rooms
+    /// can then be used for path processing or connectivity testing.
+    fn partition_rooms(&self) -> Vec<GridRoom> {
+        let mut out = Vec::new();
+
+        // Make an set of the unvisited cells. Use this for finding new
+        // locations
+        let mut unvisited = HashSet::<(usize, usize)>::with_capacity(self.xmax*self.ymax);
+        for i in 0..self.xmax {
+            for j in 0 .. self.ymax {
+                unvisited.insert((i,j));
+            }
+        }
+
+        // Now keep looping until we've covered ever cell in the map and found
+        // all of the rooms
+        while !unvisited.is_empty() {
+            // Each time, we start with an index; we don't really care what
+            // it is so the unordered hashset works well here.
+            let first_index = unvisited.iter().next().unwrap();
+            let mut x = first_index.0;
+            let mut y = first_index.1;
+            let this_area_type = &self.cells[x][y].area;
+
+            // This is going to be a 'room' (which includes contiguous AreaType::Nothing
+            // spaces). Make a new one here that we're going to build up.
+            let mut room = GridRoom::new();
+
+            // Need a queue for the flood algorithm. We're going to keep adding
+            // to this queue until we run out of spaces to add to it.
+            let mut proc_queue = VecDeque::new();
+            // Our initial seed is the starting index that we got from 'unvisited'
+            proc_queue.push_back((x,y));
+
+            // The queue works on the concept that we can keep adding to it
+            // whenever we find a new cell of our room but that we don't when
+            // the new cell is not a part of our room. We flood from the initial
+            // cell, meaning that we start at the starting index and then add
+            // the index at the above/below/left/right of that cell. In the beginning
+            // this fans out a lot, with massive expansion of the queue, but as
+            // we begin to run into walls then we stop adding to the queue and
+            // it begins to drain.
+            while !proc_queue.is_empty() {
+                // pop_front makes this a FIFO. Doesn't really matter, we could
+                // have done it another way.
+                let index = proc_queue.pop_front().unwrap();
+                x = index.0;
+                y = index.1;
+
+                if x >= self.xmax || y >= self.ymax {
+                    // If the value is too big then just continue. The value
+                    // has already been removed from the queue and it doesn't
+                    // need to be removed from unvisited since it's outside
+                    // the map area.
+                    continue;
+                }
+
+                if self.cells[x][y].area != *this_area_type {
+                    // Check that the cell is the correct type. If it is, then continue
+                    // with processing it, otherwise don't remove it from the unvisited
+                    // list (since we still might need to visit it).
+                    continue;
+                }
+
+                if !unvisited.remove(&index) {
+                    // HashSet.remove() returns a bool that's true if the value
+                    // was in the set. In this case that tells us if we've been
+                    // here before. If we have, then don't do any further processing.
+                    continue;
+                }
+
+                // If we've got here then the cell is a part of our room because
+                // it has the correct type and we haven't processed it yet. Add
+                // it too our room and then add the immediate nearest neighbours
+                // to our processing queue.
+                room.add_cell(&index).expect("failed to add cell");
+                proc_queue.push_back((x+1, y));
+                proc_queue.push_back((x.saturating_sub(1), y));
+                proc_queue.push_back((x, y+1));
+                proc_queue.push_back((x, y.saturating_sub(1)));
+            }
+            // The room is now complete; add it to our output vector and forget
+            // about this particular room.
+            out.push(room);
+        }
+
+        // Room processing is done. Return.
+        out
     }
 }
