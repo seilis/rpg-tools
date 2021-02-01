@@ -202,7 +202,7 @@ impl GridMap {
         let mut rng = thread_rng();
         for i in 0 .. self.xmax {
             for j in 0 .. self.ymax {
-                let val = rng.gen_range(1, 100);
+                let val = rng.gen_range(1..100);
                 if val > limit {
                     self.cells[i][j].area = AreaType::Room;
                 } else {
@@ -234,12 +234,12 @@ impl GridMap {
         let mut rng = rand::thread_rng();
 
         // Generate size of the room
-        let width = rng.gen_range(2, scale);
-        let height = rng.gen_range(2, scale);
+        let width = rng.gen_range(2..scale);
+        let height = rng.gen_range(2..scale);
 
         // Generate the origin (location) of the room
-        let x0 = rng.gen_range(1, self.xmax);
-        let y0 = rng.gen_range(1, self.ymax);
+        let x0 = rng.gen_range(1..self.xmax);
+        let y0 = rng.gen_range(1..self.ymax);
 
         // See if we need to connect the room to an existing one.
         if connect {
