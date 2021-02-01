@@ -38,7 +38,6 @@
 cpp/rpgmap
 
 # Rust/Cargo products
-Cargo.lock
 target/
 
 # Testing output
