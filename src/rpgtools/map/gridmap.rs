@@ -3,6 +3,7 @@ use std::cmp;
 use std::collections::VecDeque;
 use std::fs::File;
 use std::collections::HashSet;
+use std::io::{Error, ErrorKind};
 
 // Extern crates
 extern crate rand;
@@ -11,7 +12,7 @@ use rand::prelude::*;
 
 extern crate image;
 use image::ColorType;
-use image::png::PNGEncoder;
+use image::png::PngEncoder;
 
 // Local modules
 mod gridcell;
@@ -397,7 +398,7 @@ impl GridMap {
         const GRID_SEP_COLOUR: u8 = 190;
 
         let output = File::create(filename)?;
-        let encoder = PNGEncoder::new(output);
+        let encoder = PngEncoder::new(output);
 
         // Find the limits of our image
         let row_length = self.xmax*scale;
@@ -498,8 +499,10 @@ impl GridMap {
 
         // Now we have filled out the entire pixel array, we pass it to the
         // encode() method. At the moment, we just need a grayscale image.
-        encoder.encode(&pixels, row_length as u32, num_rows as u32, ColorType::Gray(8))?;
-        Ok(()) // Finished!
+        match encoder.encode(&pixels, row_length as u32, num_rows as u32, ColorType::L8) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Error::new(ErrorKind::Other, "failed to encode image")),
+        }
     }
 
     /// Partition the map into groups of cells, called Rooms.
