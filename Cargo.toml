@@ -1,6 +1,6 @@
 [package]
 name = "rpgtools"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Aaron Seilis <aaron.seilis@seilis.ca>"]
 edition = "2018"
 description = "Collection of utilities to help run tabletop role-playing games"
@@ -8,7 +8,7 @@ repository = "https://github.com/seilis/rpg-tools"
 readme = "README.md"
 keywords = ["rpg", "rpg-tool", "role-playing-game", "tabletop-rpgs"]
 categories = ["games"]
-license-file = "LICENSE"
+license = "GPL-3.0"
 
 [dependencies]
 clap = "^2.33"
