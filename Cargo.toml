@@ -1,6 +1,6 @@
 [package]
 name = "rpgtools"
-version = "1.1.0-alpha"
+version = "1.1.0"
 authors = ["Aaron Seilis <aaron.seilis@seilis.ca>"]
 edition = "2018"
 description = "Collection of utilities to help run tabletop role-playing games"
