@@ -1,10 +1,9 @@
 // rpgmap main source file
 //
 // Program for making simple RPG maps. This is the Rust language implementation.
+use clap::{App, Arg};
 
 use rpgtools::map::GridMap;
-
-use clap::{App, Arg};
 
 /// Test whether an input string can be parsed as an int and return a Result
 /// as per clap's argument validation API.
@@ -61,20 +60,24 @@ fn main() {
     let mut map = GridMap::new(width, height);
 
     // Build map based on map type
-    if style == "halls" {
-        map.place_room(
-            (width / 2 - 1, height / 2 - 1),
-            (width / 2 + 1, height / 2 + 1),
-        );
-        map.place_entrance((width / 2, height / 2));
+    match style {
+        "halls" => {
+            map.place_room(
+                (width / 2 - 1, height / 2 - 1),
+                (width / 2 + 1, height / 2 + 1),
+            );
+            map.place_entrance((width / 2, height / 2));
 
-        for _ in 0..30 {
-            map.place_random_room(10, true);
+            for _ in 0..30 {
+                map.place_random_room(10, true);
+            }
         }
-    } else if style == "cave" {
-        map.generate_cave(4, 50);
-        map.place_entrance_near((width / 2, height / 2))
-            .expect("width/height is outside of map");
+        "cave" => {
+            map.generate_cave(4, 50);
+            map.place_entrance_near((width / 2, height / 2))
+                .expect("width/height is outside of map");
+        }
+        _ => unreachable!(),
     }
 
     let filename = "example.png";

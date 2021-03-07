@@ -13,7 +13,15 @@ This program currently has 2 implementations: a primary one in Rust and a second
 
 Example maps look like this:
 
+```
+rpgmap -x 60 -y 60
+```
 ![Example halls map](doc/images/halls_60x60.png)
+
+```
+rpgmap -s cave -x 50 -y 50
+```
+![Example caves map](doc/images/caves_50x50.png)
 
 # Install
 ## Rust

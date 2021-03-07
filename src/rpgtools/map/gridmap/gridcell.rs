@@ -70,13 +70,10 @@ impl GridCell {
 
     /// Check whether the GridCell is part of a dungeon room
     pub fn is_room(&self) -> bool {
-        matches!(
+        !matches!(
             *self,
             GridCell {
-                area: AreaType::Room,
-                ..
-            } | GridCell {
-                area: AreaType::Entrance,
+                area: AreaType::Nothing,
                 ..
             }
         )

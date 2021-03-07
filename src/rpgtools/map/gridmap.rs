@@ -12,6 +12,8 @@ use rand::{thread_rng, Rng};
 use image::png::PngEncoder;
 use image::ColorType;
 
+use itertools::Itertools;
+
 // Local modules
 mod gridcell;
 use gridcell::{AreaType, GridCell};
@@ -33,14 +35,14 @@ impl GridMap {
     /// Make a new GridMap
     pub fn new(xmax: usize, ymax: usize) -> GridMap {
         GridMap {
-            xmax: xmax,
-            ymax: ymax,
+            xmax,
+            ymax,
             cells: vec![vec![GridCell::new(); ymax]; xmax],
         }
     }
 
     /// Set the entrance at a particular location. The cell at this location
-    /// will be marked as having the entrance area type. Typcially this will
+    /// will be marked as having the entrance area type. Typically this will
     /// be coloured differently on a map.
     pub fn place_entrance(&mut self, (x, y): (usize, usize)) {
         if x >= self.xmax || y >= self.ymax {
@@ -391,12 +393,31 @@ impl GridMap {
     }
 
     pub fn generate_cave(&mut self, iter: i64, seed_limit: i64) {
+        // Makes a random selection of cells
         self.generate_random_cells(seed_limit);
 
+        // Anneal the cells into blobs
         for _ in 0..iter {
             self.generate_cave_iteration();
         }
+
+        // Get rid of small caves; reduces visual noise
         self.remove_orphans();
+
+        // Connect caves together
+        let caves = self.partition_rooms();
+
+        // So many n^2 algos :-(
+        for caves_combo in caves.iter().combinations(2) {
+            let cave = caves_combo[0];
+            let cave2 = caves_combo[1];
+
+            let (cell1, cell2) = cave.nearest_cells(cave2).expect("finding nearest cells failed");
+
+            if (cell1.0 as isize - cell2.0 as isize).pow(2) + (cell1.1 as isize - cell2.1 as isize).pow(2) < 36 {
+                self.place_hallway(cell1, cell2, RouteMethod::Manhattan);
+            }
+        }
     }
 
     /// Make a PNG file of the gridmap
