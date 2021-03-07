@@ -2,10 +2,8 @@
 //
 // Program for making simple RPG maps. This is the Rust language implementation.
 
-extern crate rpgtools;
 use rpgtools::map::GridMap;
 
-extern crate clap;
 use clap::{Arg, App};
 
 /// Test whether an input string can be parsed as an int and return a Result

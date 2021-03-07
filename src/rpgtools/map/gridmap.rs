@@ -6,11 +6,9 @@ use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 
 // Extern crates
-extern crate rand;
 use rand::{thread_rng, Rng};
 use rand::prelude::*;
 
-extern crate image;
 use image::ColorType;
 use image::png::PngEncoder;
 
