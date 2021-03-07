@@ -1,25 +1,24 @@
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum AreaType {
     Nothing,
     Entrance,
     Room,
-//    Stairs,
-//    Tested,
+    //    Stairs,
+    //    Tested,
 }
 
 #[derive(Clone, Debug)]
 pub enum WallType {
     Nothing,
-//    Wall,
-//    Door,
-//    SecretDoor,
+    //    Wall,
+    //    Door,
+    //    SecretDoor,
 }
 
 #[derive(Clone, Debug)]
 pub enum PointType {
     Nothing,
-//    Pillar,
+    //    Pillar,
 }
 
 /// Representation of a GridCell, which is a single unit in a grid.
@@ -61,19 +60,25 @@ impl GridCell {
         )
     }
 
-//    /// Check whether the GridCell represents a dungeon entrance
-//    pub fn is_entrance(&self) -> bool {
-//        match self {
-//            &GridCell { area: AreaType::Entrance, ..} => true,
-//            _ => false
-//        }
-//    }
+    //    /// Check whether the GridCell represents a dungeon entrance
+    //    pub fn is_entrance(&self) -> bool {
+    //        match self {
+    //            &GridCell { area: AreaType::Entrance, ..} => true,
+    //            _ => false
+    //        }
+    //    }
 
     /// Check whether the GridCell is part of a dungeon room
     pub fn is_room(&self) -> bool {
-        matches!(*self,
-            GridCell { area: AreaType::Room, ..}
-            | GridCell { area: AreaType::Entrance, .. }
+        matches!(
+            *self,
+            GridCell {
+                area: AreaType::Room,
+                ..
+            } | GridCell {
+                area: AreaType::Entrance,
+                ..
+            }
         )
     }
 }

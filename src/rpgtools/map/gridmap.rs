@@ -1,23 +1,23 @@
 // std library
 use std::cmp;
+use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::fs::File;
-use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 
 // Extern crates
-use rand::{thread_rng, Rng};
 use rand::prelude::*;
+use rand::{thread_rng, Rng};
 
-use image::ColorType;
 use image::png::PngEncoder;
+use image::ColorType;
 
 // Local modules
 mod gridcell;
-use gridcell::{GridCell, AreaType};
+use gridcell::{AreaType, GridCell};
 
 mod gridroom;
-use gridroom::{GridRoom};
+use gridroom::GridRoom;
 
 // Need RouteMethod from rpgmap::route
 use super::route::RouteMethod;
@@ -26,7 +26,7 @@ use super::route::RouteMethod;
 pub struct GridMap {
     xmax: usize,
     ymax: usize,
-    cells: Vec<Vec<GridCell>>
+    cells: Vec<Vec<GridCell>>,
 }
 
 impl GridMap {
@@ -35,7 +35,7 @@ impl GridMap {
         GridMap {
             xmax: xmax,
             ymax: ymax,
-            cells: vec![vec![GridCell::new(); ymax]; xmax]
+            cells: vec![vec![GridCell::new(); ymax]; xmax],
         }
     }
 
@@ -58,10 +58,11 @@ impl GridMap {
             return Err("asked for an entrance outside map boundaries");
         }
 
-        let (x, y) = self.find_by((x, y),
-                                  &|cell: &GridCell| -> bool {cell.is_room()}).unwrap();
+        let (x, y) = self
+            .find_by((x, y), &|cell: &GridCell| -> bool { cell.is_room() })
+            .unwrap();
 
-        self.place_entrance((x,y));
+        self.place_entrance((x, y));
         Ok(())
     }
 
@@ -73,8 +74,8 @@ impl GridMap {
         let x_upper = cmp::min(self.xmax, cmp::max(x0, x1)); // Calculate the upper bound of x
         let y_upper = cmp::min(self.ymax, cmp::max(y0, y1)); // Calculate the upper bound of y
 
-        for i in x_lower .. x_upper+1 {
-            for j in y_lower .. y_upper+1 {
+        for i in x_lower..x_upper + 1 {
+            for j in y_lower..y_upper + 1 {
                 if self.cells[i][j].area != AreaType::Entrance {
                     self.cells[i][j].area = AreaType::Room;
                 }
@@ -99,7 +100,12 @@ impl GridMap {
     }
 
     /// Place a hallway between two points
-    pub fn place_hallway(&mut self, (x0, y0): (usize, usize), (x1, y1): (usize, usize), route: RouteMethod) {
+    pub fn place_hallway(
+        &mut self,
+        (x0, y0): (usize, usize),
+        (x1, y1): (usize, usize),
+        route: RouteMethod,
+    ) {
         let route_selected = match route {
             RouteMethod::HorizontalFirst => RouteMethod::HorizontalFirst,
             RouteMethod::VerticalFirst => RouteMethod::VerticalFirst,
@@ -116,19 +122,18 @@ impl GridMap {
             RouteMethod::HorizontalFirst => {
                 self.place_room((x0, y0), (x1, y0));
                 self.place_room((x1, y0), (x1, y1));
-            },
+            }
             RouteMethod::VerticalFirst => {
                 self.place_room((x0, y0), (x0, y1));
                 self.place_room((x0, y1), (x1, y1));
             }
-            _ =>  panic!("Found unsupported route!")
+            _ => panic!("Found unsupported route!"),
         };
     }
 
     /// Find the nearest connected cell to the cell specified
     fn find_nearest_connected(&self, (x, y): (usize, usize)) -> Option<(usize, usize)> {
-        self.find_by((x, y),
-                     &|cell: &GridCell| -> bool {cell.is_room()})
+        self.find_by((x, y), &|cell: &GridCell| -> bool { cell.is_room() })
     }
 
     /// Find a cell with an arbitrary condition. This funciton takes a starting
@@ -137,7 +142,9 @@ impl GridMap {
     /// and outputs a result containing a boolean stating whether the match has
     /// been made or not.
     fn find_by<F>(&self, (x, y): (usize, usize), cond: &F) -> Option<(usize, usize)>
-    where F: Fn(&GridCell) -> bool {
+    where
+        F: Fn(&GridCell) -> bool,
+    {
         let mut rooms = Vec::<(usize, usize)>::new();
         let mut found = false;
         let mut radius: usize = 0;
@@ -145,19 +152,19 @@ impl GridMap {
         while !found {
             radius += 1; // Increase search radius every loop
             let xmin = x.saturating_sub(radius); // Bounds xmin at 0
-            let xmax = cmp::min(self.xmax-1, x+radius); // Bounds xmax at self.xmax
+            let xmax = cmp::min(self.xmax - 1, x + radius); // Bounds xmax at self.xmax
             let ymin = y.saturating_sub(radius);
-            let ymax = cmp::min(self.ymax-1, y+radius);
+            let ymax = cmp::min(self.ymax - 1, y + radius);
 
-            if xmin == 0 && ymin == 0 && xmax == self.xmax-1 && ymax == self.ymax-1 {
+            if xmin == 0 && ymin == 0 && xmax == self.xmax - 1 && ymax == self.ymax - 1 {
                 // If this condition is true then we've searched the whole grid
                 // and didn't find what we were looking for. Return None, which
                 // indicates that no rooms were found.
-                return None
+                return None;
             }
 
             // Scan horizontal neighbours
-            for i in xmin .. xmax+1 {
+            for i in xmin..xmax + 1 {
                 if cond(&self.cells[i][ymin]) {
                     rooms.push((i, ymin));
                     found = true;
@@ -169,7 +176,7 @@ impl GridMap {
             }
 
             // Scan virtical neighbours
-            for j in ymin .. ymax+1 {
+            for j in ymin..ymax + 1 {
                 if cond(&self.cells[xmin][j]) {
                     rooms.push((xmin, j));
                     found = true;
@@ -193,14 +200,13 @@ impl GridMap {
         }
     }
 
-
     /// Generate random cells with a biasing towards more/less rooms. Limit is a value
     /// between 1 and 100. This limit sets the chance that the cells are a room.
     /// Higher limit means fewer rooms.
     pub fn generate_random_cells(&mut self, limit: i64) {
         let mut rng = thread_rng();
-        for i in 0 .. self.xmax {
-            for j in 0 .. self.ymax {
+        for i in 0..self.xmax {
+            for j in 0..self.ymax {
                 let val = rng.gen_range(1..100);
                 if val > limit {
                     self.cells[i][j].area = AreaType::Room;
@@ -216,10 +222,12 @@ impl GridMap {
         self.generate_random_cells(80);
 
         // Anneal by removing stragglers
-        for i in 1 .. self.xmax {
-            for j in 1 .. self.ymax {
-                let alone = self.cells[i-1][j].is_empty() && self.cells[i][j-1].is_empty()
-                            && self.cells[i+1][j].is_empty() && self.cells[i][j+1].is_empty();
+        for i in 1..self.xmax {
+            for j in 1..self.ymax {
+                let alone = self.cells[i - 1][j].is_empty()
+                    && self.cells[i][j - 1].is_empty()
+                    && self.cells[i + 1][j].is_empty()
+                    && self.cells[i][j + 1].is_empty();
                 if alone {
                     self.cells[i][j].area = AreaType::Nothing;
                 }
@@ -242,10 +250,11 @@ impl GridMap {
 
         // See if we need to connect the room to an existing one.
         if connect {
-
             // Find the nearest connected location and return
             // the coordinates.
-            let (x, y) = self.find_nearest_connected((x0, y0)).expect("no existing rooms to connect");
+            let (x, y) = self
+                .find_nearest_connected((x0, y0))
+                .expect("no existing rooms to connect");
             // Drow the hallway; some of this will be overwritten by
             // the room placement below.
             self.place_hallway((x0, y0), (x, y), RouteMethod::Manhattan);
@@ -253,13 +262,12 @@ impl GridMap {
 
         // Set x/y min/max while checking for overflows on either
         // the lower or upper bounds.
-        let xmin = x0.saturating_sub(width/2);
-        let ymin = y0.saturating_sub(height/2);
-        let xmax = cmp::min(self.xmax-1, x0+width/2);
-        let ymax = cmp::min(self.ymax-1, y0+width/2);
+        let xmin = x0.saturating_sub(width / 2);
+        let ymin = y0.saturating_sub(height / 2);
+        let xmax = cmp::min(self.xmax - 1, x0 + width / 2);
+        let ymax = cmp::min(self.ymax - 1, y0 + width / 2);
 
-        self.place_room((xmin, ymin),
-                        (xmax, ymax));
+        self.place_room((xmin, ymin), (xmax, ymax));
     }
 
     /// Determine if i, or j lies on an edge.
@@ -267,7 +275,7 @@ impl GridMap {
         // Logic here is pretty simple: if either i or j is the max
         // value or 0 then they're on the edge of the map. All maps
         // are rectangular.
-        i == 0 || i == self.xmax-1 || j ==0 || j == self.ymax-1
+        i == 0 || i == self.xmax - 1 || j == 0 || j == self.ymax - 1
     }
 
     fn cave_anneal_cell(&self, i: usize, j: usize) -> bool {
@@ -275,8 +283,8 @@ impl GridMap {
             let mut neighbours = 0;
 
             // 3x3 grid
-            for x in i-1..i+2 {
-                for y in j-1..j+2 {
+            for x in i - 1..i + 2 {
+                for y in j - 1..j + 2 {
                     if self.cells[x][y].area == AreaType::Room {
                         neighbours += 1;
                     }
@@ -329,7 +337,7 @@ impl GridMap {
         proc_queue.push_back((i, j));
 
         // Mask to make sure we don't revisit rooms
-        let mut visited = vec![false; (self.xmax)*(self.ymax)];
+        let mut visited = vec![false; (self.xmax) * (self.ymax)];
 
         while !proc_queue.is_empty() {
             // Remove a room from the queue and unpack the values
@@ -337,23 +345,23 @@ impl GridMap {
 
             // If we have visited this cell before or it is not a "room" then
             // we should stop processing and move on to the next
-            if visited[x*self.xmax+y] {
+            if visited[x * self.xmax + y] {
                 continue;
             } else if self.cells[x][y].area != AreaType::Room {
-                continue
+                continue;
             }
 
             // We got here so it's a room that we haven't visited. Mark it as visited now
-            visited[x*self.xmax+y] = true;
+            visited[x * self.xmax + y] = true;
 
             // This is a room and we haven't visited, so add one to size.
             size += 1;
 
             // Add all neighbours to the queue
-            proc_queue.push_back((x-1, y));
-            proc_queue.push_back((x+1, y));
-            proc_queue.push_back((x, y-1));
-            proc_queue.push_back((x, y+1));
+            proc_queue.push_back((x - 1, y));
+            proc_queue.push_back((x + 1, y));
+            proc_queue.push_back((x, y - 1));
+            proc_queue.push_back((x, y + 1));
         }
         // Returning the full size of the room
         size
@@ -375,17 +383,17 @@ impl GridMap {
             }
 
             self.cells[i][j].area = AreaType::Nothing;
-            proc_queue.push_back((i+1, j));
-            proc_queue.push_back((i-1, j));
-            proc_queue.push_back((i, j+1));
-            proc_queue.push_back((i, j-1));
+            proc_queue.push_back((i + 1, j));
+            proc_queue.push_back((i - 1, j));
+            proc_queue.push_back((i, j + 1));
+            proc_queue.push_back((i, j - 1));
         }
     }
 
     pub fn generate_cave(&mut self, iter: i64, seed_limit: i64) {
         self.generate_random_cells(seed_limit);
 
-        for _ in 0 .. iter {
+        for _ in 0..iter {
             self.generate_cave_iteration();
         }
         self.remove_orphans();
@@ -399,22 +407,22 @@ impl GridMap {
         let encoder = PngEncoder::new(output);
 
         // Find the limits of our image
-        let row_length = self.xmax*scale;
-        let num_rows = self.ymax*scale;
+        let row_length = self.xmax * scale;
+        let num_rows = self.ymax * scale;
 
         // Allocate enough pixels to hold the image. Note that the encode()
         // function used below requires this to be a linear array.
-        let mut pixels = vec![0; (self.xmax)*(self.ymax)*(scale*scale) as usize];
+        let mut pixels = vec![0; (self.xmax) * (self.ymax) * (scale * scale) as usize];
 
         // Loop through all of our cells
-        for x in 0 .. self.xmax {
-            for y in 0 .. self.ymax {
+        for x in 0..self.xmax {
+            for y in 0..self.ymax {
                 // Set the colour of this cell. All pixels within the cell
                 // will have this value.
                 let color = match self.cells[x][y].area {
                     AreaType::Room => 200,
                     AreaType::Entrance => 255,
-                    _ => 25
+                    _ => 25,
                 };
 
                 // Loop through all of the pixels in the cell. We do this by
@@ -424,14 +432,17 @@ impl GridMap {
                 // by the number of rows down, then we add the x-offset to
                 // determine where we should begin.
                 for i in 0..scale {
-                    let base = x*scale + (y*scale+i)*row_length;
-                    for j in base..(base+scale) {
+                    let base = x * scale + (y * scale + i) * row_length;
+                    for j in base..(base + scale) {
                         pixels[j] = color;
                     }
                 }
 
                 // Now check whether ne need to draw the borders of the cell
-                if x < self.xmax-1 && self.cells[x][y].area == AreaType::Room && self.cells[x+1][y].area == AreaType::Room {
+                if x < self.xmax - 1
+                    && self.cells[x][y].area == AreaType::Room
+                    && self.cells[x + 1][y].area == AreaType::Room
+                {
                     // Base calculation: the pixels are packed into a linear
                     // array where a whole horizontal row is adjacent. So the
                     // index in general is:  idx = y * row_length + x
@@ -445,42 +456,51 @@ impl GridMap {
                     // offset by our y index row length to get the pixel
                     // for our cell in the y offset. When drowing, this
                     // is the pixel in the top right-hand corner of the cell.
-                    let base = (x+1)*scale-1 + y*scale*row_length;
+                    let base = (x + 1) * scale - 1 + y * scale * row_length;
                     // Draw the vertical line. Need to visit each pixel on
                     // the rightmost side.
-                    for row in 0 .. scale {
+                    for row in 0..scale {
                         // Since we know our base, we can just offset by the
                         // row_length each time to find the pixel directly
                         // below the last.
-                        let index = base + row*row_length;
+                        let index = base + row * row_length;
                         pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
-                if x > 0 && self.cells[x][y].area == AreaType::Room && self.cells[x-1][y].area == AreaType::Room {
+                if x > 0
+                    && self.cells[x][y].area == AreaType::Room
+                    && self.cells[x - 1][y].area == AreaType::Room
+                {
                     // Explanation is the same as above but now it's the first
                     // pixel in our box
-                    let base = x*scale + y*scale*row_length;
-                    for row in 0 .. scale {
+                    let base = x * scale + y * scale * row_length;
+                    for row in 0..scale {
                         // Since we know our base, we can just offset by the
                         // row_length each time to find the pixel directly
                         // below the last.
-                        let index = base + row*row_length;
+                        let index = base + row * row_length;
                         pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
-                if y < self.ymax-1 && self.cells[x][y].area == AreaType::Room && self.cells[x][y+1].area == AreaType::Room {
+                if y < self.ymax - 1
+                    && self.cells[x][y].area == AreaType::Room
+                    && self.cells[x][y + 1].area == AreaType::Room
+                {
                     // Explanation is the same as above but now it's a horizontal
                     // line so we can just use the range syntax.
-                    let base = x*scale + y*scale*row_length + (scale-1)*row_length;
-                    for index in base .. base+scale {
+                    let base = x * scale + y * scale * row_length + (scale - 1) * row_length;
+                    for index in base..base + scale {
                         pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
-                if y > 0 && self.cells[x][y].area == AreaType::Room && self.cells[x][y-1].area == AreaType::Room {
+                if y > 0
+                    && self.cells[x][y].area == AreaType::Room
+                    && self.cells[x][y - 1].area == AreaType::Room
+                {
                     // Explanation is the same as above but now it's a horizontal
                     // line so we can just use the range syntax.
-                    let base = x*scale + y*scale*row_length;
-                    for index in base .. base+scale {
+                    let base = x * scale + y * scale * row_length;
+                    for index in base..base + scale {
                         pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
@@ -505,10 +525,10 @@ impl GridMap {
 
         // Make an set of the unvisited cells. Use this for finding new
         // locations
-        let mut unvisited = HashSet::<(usize, usize)>::with_capacity(self.xmax*self.ymax);
+        let mut unvisited = HashSet::<(usize, usize)>::with_capacity(self.xmax * self.ymax);
         for i in 0..self.xmax {
-            for j in 0 .. self.ymax {
-                unvisited.insert((i,j));
+            for j in 0..self.ymax {
+                unvisited.insert((i, j));
             }
         }
 
@@ -530,7 +550,7 @@ impl GridMap {
             // to this queue until we run out of spaces to add to it.
             let mut proc_queue = VecDeque::new();
             // Our initial seed is the starting index that we got from 'unvisited'
-            proc_queue.push_back((x,y));
+            proc_queue.push_back((x, y));
 
             // The queue works on the concept that we can keep adding to it
             // whenever we find a new cell of our room but that we don't when
@@ -574,9 +594,9 @@ impl GridMap {
                 // it too our room and then add the immediate nearest neighbours
                 // to our processing queue.
                 room.add_cell(&index).expect("failed to add cell");
-                proc_queue.push_back((x+1, y));
+                proc_queue.push_back((x + 1, y));
                 proc_queue.push_back((x.saturating_sub(1), y));
-                proc_queue.push_back((x, y+1));
+                proc_queue.push_back((x, y + 1));
                 proc_queue.push_back((x, y.saturating_sub(1)));
             }
             // The room is now complete; add it to our output vector and forget
