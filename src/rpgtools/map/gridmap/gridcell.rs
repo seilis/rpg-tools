@@ -49,14 +49,16 @@ impl GridCell {
     /// Check if a GridCell is 'empty', meaning that all drawing-related
     /// fields have a value of 'Nothing'.
     pub fn is_empty(&self) -> bool {
-        match self {
-            &GridCell { area: AreaType::Nothing,
-                       vert_wall: WallType::Nothing,
-                       horiz_wall: WallType::Nothing,
-                       point: PointType::Nothing,
-                       .. } => true,
-            _ => false
-        }
+        matches!(
+            *self,
+            GridCell {
+                area: AreaType::Nothing,
+                vert_wall: WallType::Nothing,
+                horiz_wall: WallType::Nothing,
+                point: PointType::Nothing,
+                ..
+            }
+        )
     }
 
 //    /// Check whether the GridCell represents a dungeon entrance
@@ -69,11 +71,10 @@ impl GridCell {
 
     /// Check whether the GridCell is part of a dungeon room
     pub fn is_room(&self) -> bool {
-        match self {
-            &GridCell { area: AreaType::Room, ..} => true,
-            &GridCell { area: AreaType::Entrance, .. } => true,
-            _ => false
-        }
+        matches!(*self,
+            GridCell { area: AreaType::Room, ..}
+            | GridCell { area: AreaType::Entrance, .. }
+        )
     }
 }
 

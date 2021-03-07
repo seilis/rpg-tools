@@ -187,7 +187,7 @@ impl GridMap {
         // that's found there. x.choose() returns a reference and not
         // the value itself.
         if let Some(idx) = rooms.choose(&mut rng) {
-            Some(idx.clone())
+            Some(*idx)
         } else {
             None
         }
@@ -331,7 +331,7 @@ impl GridMap {
         // Mask to make sure we don't revisit rooms
         let mut visited = vec![false; (self.xmax)*(self.ymax)];
 
-        while proc_queue.len() > 0 {
+        while !proc_queue.is_empty() {
             // Remove a room from the queue and unpack the values
             let (x, y) = proc_queue.pop_front().unwrap();
 
@@ -367,7 +367,7 @@ impl GridMap {
         let mut proc_queue = VecDeque::new();
         proc_queue.push_back((x, y));
 
-        while proc_queue.len() > 0 {
+        while !proc_queue.is_empty() {
             let (i, j) = proc_queue.pop_front().unwrap();
 
             if self.cells[i][j].area == AreaType::Nothing {
@@ -431,65 +431,57 @@ impl GridMap {
                 }
 
                 // Now check whether ne need to draw the borders of the cell
-                if x < self.xmax-1 {
-                    if self.cells[x][y].area == AreaType::Room && self.cells[x+1][y].area == AreaType::Room {
-                        // Base calculation: the pixels are packed into a linear
-                        // array where a whole horizontal row is adjacent. So the
-                        // index in general is:  idx = y * row_length + x
-                        //
-                        // In this case, we are drawing a vertical line so we
-                        // have to keep calculating this index rather than just
-                        // using a range. Here, we're finding the base by taking
-                        // the first horizontal pixel of the _next_ horizontal
-                        // cell (x+1)*scale and subtracting by 1, which is the
-                        // last pixel of our own cell. All of this needs to be
-                        // offset by our y index row length to get the pixel
-                        // for our cell in the y offset. When drowing, this
-                        // is the pixel in the top right-hand corner of the cell.
-                        let base = (x+1)*scale-1 + y*scale*row_length;
-                        // Draw the vertical line. Need to visit each pixel on
-                        // the rightmost side.
-                        for row in 0 .. scale {
-                            // Since we know our base, we can just offset by the
-                            // row_length each time to find the pixel directly
-                            // below the last.
-                            let index = base + row*row_length;
-                            pixels[index] = GRID_SEP_COLOUR;
-                        }
+                if x < self.xmax-1 && self.cells[x][y].area == AreaType::Room && self.cells[x+1][y].area == AreaType::Room {
+                    // Base calculation: the pixels are packed into a linear
+                    // array where a whole horizontal row is adjacent. So the
+                    // index in general is:  idx = y * row_length + x
+                    //
+                    // In this case, we are drawing a vertical line so we
+                    // have to keep calculating this index rather than just
+                    // using a range. Here, we're finding the base by taking
+                    // the first horizontal pixel of the _next_ horizontal
+                    // cell (x+1)*scale and subtracting by 1, which is the
+                    // last pixel of our own cell. All of this needs to be
+                    // offset by our y index row length to get the pixel
+                    // for our cell in the y offset. When drowing, this
+                    // is the pixel in the top right-hand corner of the cell.
+                    let base = (x+1)*scale-1 + y*scale*row_length;
+                    // Draw the vertical line. Need to visit each pixel on
+                    // the rightmost side.
+                    for row in 0 .. scale {
+                        // Since we know our base, we can just offset by the
+                        // row_length each time to find the pixel directly
+                        // below the last.
+                        let index = base + row*row_length;
+                        pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
-                if x > 0 {
-                    if self.cells[x][y].area == AreaType::Room && self.cells[x-1][y].area == AreaType::Room {
-                        // Explanation is the same as above but now it's the first
-                        // pixel in our box
-                        let base = x*scale + y*scale*row_length;
-                        for row in 0 .. scale {
-                            // Since we know our base, we can just offset by the
-                            // row_length each time to find the pixel directly
-                            // below the last.
-                            let index = base + row*row_length;
-                            pixels[index] = GRID_SEP_COLOUR;
-                        }
+                if x > 0 && self.cells[x][y].area == AreaType::Room && self.cells[x-1][y].area == AreaType::Room {
+                    // Explanation is the same as above but now it's the first
+                    // pixel in our box
+                    let base = x*scale + y*scale*row_length;
+                    for row in 0 .. scale {
+                        // Since we know our base, we can just offset by the
+                        // row_length each time to find the pixel directly
+                        // below the last.
+                        let index = base + row*row_length;
+                        pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
-                if y < self.ymax-1 {
-                    if self.cells[x][y].area == AreaType::Room && self.cells[x][y+1].area == AreaType::Room {
-                        // Explanation is the same as above but now it's a horizontal
-                        // line so we can just use the range syntax.
-                        let base = x*scale + y*scale*row_length + (scale-1)*row_length;
-                        for index in base .. base+scale {
-                            pixels[index] = GRID_SEP_COLOUR;
-                        }
+                if y < self.ymax-1 && self.cells[x][y].area == AreaType::Room && self.cells[x][y+1].area == AreaType::Room {
+                    // Explanation is the same as above but now it's a horizontal
+                    // line so we can just use the range syntax.
+                    let base = x*scale + y*scale*row_length + (scale-1)*row_length;
+                    for index in base .. base+scale {
+                        pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
-                if y > 0 {
-                    if self.cells[x][y].area == AreaType::Room && self.cells[x][y-1].area == AreaType::Room {
-                        // Explanation is the same as above but now it's a horizontal
-                        // line so we can just use the range syntax.
-                        let base = x*scale + y*scale*row_length;
-                        for index in base .. base+scale {
-                            pixels[index] = GRID_SEP_COLOUR;
-                        }
+                if y > 0 && self.cells[x][y].area == AreaType::Room && self.cells[x][y-1].area == AreaType::Room {
+                    // Explanation is the same as above but now it's a horizontal
+                    // line so we can just use the range syntax.
+                    let base = x*scale + y*scale*row_length;
+                    for index in base .. base+scale {
+                        pixels[index] = GRID_SEP_COLOUR;
                     }
                 }
             }
