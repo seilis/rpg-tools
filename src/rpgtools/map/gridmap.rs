@@ -138,7 +138,7 @@ impl GridMap {
         self.find_by((x, y), &|cell: &GridCell| -> bool { cell.is_room() })
     }
 
-    /// Find a cell with an arbitrary condition. This funciton takes a starting
+    /// Find a cell with an arbitrary condition. This function takes a starting
     /// point and searches for nearby cells that satisfy condition 'cond'. The
     /// condition is passed in in the form of a function that takes a gridcell
     /// and outputs a result containing a boolean stating whether the match has
