@@ -62,15 +62,9 @@ fn main() {
     // Build map based on map type
     match style {
         "halls" => {
-            map.place_room(
-                (width / 2 - 1, height / 2 - 1),
-                (width / 2 + 1, height / 2 + 1),
-            );
-            map.place_entrance((width / 2, height / 2));
-
-            for _ in 0..30 {
-                map.place_random_room(10, true);
-            }
+            map.generate_dungeon(10);
+            map.place_entrance_near((width / 2, height / 2))
+                .expect("width/height is outside of map");
         }
         "cave" => {
             map.generate_cave(4, 50);
