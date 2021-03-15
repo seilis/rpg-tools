@@ -138,7 +138,7 @@ impl GridMap {
         self.find_by((x, y), &|cell: &GridCell| -> bool { cell.is_room() })
     }
 
-    /// Find a cell with an arbitrary condition. This funciton takes a starting
+    /// Find a cell with an arbitrary condition. This function takes a starting
     /// point and searches for nearby cells that satisfy condition 'cond'. The
     /// condition is passed in in the form of a function that takes a gridcell
     /// and outputs a result containing a boolean stating whether the match has
@@ -270,6 +270,36 @@ impl GridMap {
         let ymax = cmp::min(self.ymax - 1, y0 + width / 2);
 
         self.place_room((xmin, ymin), (xmax, ymax));
+    }
+
+    pub fn generate_dungeon(&mut self, num_rooms: i64) {
+        for _ in 0..num_rooms {
+            self.place_random_room(10, false);
+        }
+
+        let mut rooms = self.partition_rooms();
+        let mut distance: isize = 36;
+
+        while rooms.len() > 1 {
+            for rooms_combo in rooms.iter().combinations(2) {
+                let room0 = rooms_combo[0];
+                let room1 = rooms_combo[1];
+
+                if room0 == room1 {
+                    continue;
+                }
+
+                let (cell0, cell1) = room0.nearest_cells(room1).expect("finding nearest cells failed");
+
+                if (cell0.0 as isize - cell1.0 as isize).pow(2) + (cell0.1 as isize - cell1.1 as isize).pow(2) < distance {
+                    self.place_hallway(cell0, cell1, RouteMethod::Manhattan);
+                }
+            }
+
+            rooms = self.partition_rooms();
+            distance += 150;
+        }
+
     }
 
     /// Determine if i, or j lies on an edge.
@@ -536,12 +566,16 @@ impl GridMap {
         }
     }
 
+    fn partition_rooms(&self) -> Vec<GridRoom> {
+        self.partition_spaces(false)
+    }
+
     /// Partition the map into groups of cells, called Rooms.
     ///
     /// The 'rooms' are just collections of cells of the same type, so there is
     /// at least one room that contains the walls/Nothing cells. These rooms
     /// can then be used for path processing or connectivity testing.
-    fn partition_rooms(&self) -> Vec<GridRoom> {
+    fn partition_spaces(&self, include_nothing: bool) -> Vec<GridRoom> {
         let mut out = Vec::new();
 
         // Make an set of the unvisited cells. Use this for finding new
@@ -622,7 +656,9 @@ impl GridMap {
             }
             // The room is now complete; add it to our output vector and forget
             // about this particular room.
-            out.push(room);
+            if (*this_area_type != AreaType::Nothing || include_nothing) {
+                out.push(room);
+            }
         }
 
         // Room processing is done. Return.
