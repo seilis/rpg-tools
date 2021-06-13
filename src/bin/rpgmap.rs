@@ -3,7 +3,7 @@
 // Program for making simple RPG maps. This is the Rust language implementation.
 use clap::{App, Arg};
 
-use rpgtools::map::GridMap;
+use rpgtools::map::{GridMap, Renderer};
 
 /// Test whether an input string can be parsed as an int and return a Result
 /// as per clap's argument validation API.
@@ -75,7 +75,8 @@ fn main() {
     }
 
     let filename = "example.png";
-    let result = map.draw_to_file("example.png", 10);
+    let renderer = Renderer::new(&map, 10);
+    let result = renderer.draw_to_file("example.png");
 
     match result {
         Ok(_) => println!("Map generated: {}", filename),
