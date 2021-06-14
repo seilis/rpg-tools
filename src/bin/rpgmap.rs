@@ -75,7 +75,7 @@ fn main() {
     }
 
     let filename = "example.png";
-    let renderer = Renderer::new(&map, 10);
+    let renderer = Renderer::new(&map, 25);
     let result = renderer.draw_to_file("example.png");
 
     match result {
