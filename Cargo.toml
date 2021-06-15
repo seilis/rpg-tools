@@ -15,6 +15,9 @@ clap = "^2.33"
 image = "^0.23"
 itertools = "^0.10"
 rand = "^0.8"
+resvg = "^0.15"
+tiny-skia = "^0.5"
+usvg = "^0.15"
 
 [[bin]]
 name = "rpgmap"
