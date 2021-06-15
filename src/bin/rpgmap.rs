@@ -17,7 +17,7 @@ fn test_conv_to_int(val: String) -> Result<(), String> {
 
 fn main() {
     let cli = App::new("RPG map generator")
-        .version("1.1")
+        .version("1.2.0")
         .author("Aaron Seilis <aaron.seilis@seilis.ca>")
         .about("A simple map generator for role playing games")
         .arg(
@@ -25,7 +25,7 @@ fn main() {
                 .short("x")
                 .long("width")
                 .takes_value(true)
-                .default_value("100")
+                .default_value("50")
                 .value_name("INT")
                 .validator(test_conv_to_int)
                 .help("The horizontal width of the map"),
@@ -35,7 +35,7 @@ fn main() {
                 .short("y")
                 .long("height")
                 .takes_value(true)
-                .default_value("100")
+                .default_value("50")
                 .value_name("INT")
                 .validator(test_conv_to_int)
                 .help("The vertical height of the map"),
@@ -49,12 +49,52 @@ fn main() {
                 .possible_values(&["halls", "cave"])
                 .help("The style of map to generate"),
         )
+        .arg(
+            Arg::with_name("scale")
+                .short("S")
+                .long("scale")
+                .takes_value(true)
+                .default_value("25")
+                .value_name("INT")
+                .validator(test_conv_to_int)
+                .help("The number of pixels for each square"),
+        )
+        .arg(
+            Arg::with_name("output")
+                .short("o")
+                .long("output")
+                .takes_value(true)
+                .default_value("rpgmap.png")
+                .value_name("NAME")
+                .help("The name of the output file"),
+        )
+        .arg(
+            Arg::with_name("num_rooms")
+                .long("num-rooms")
+                .takes_value(true)
+                .default_value("30")
+                .value_name("INT")
+                .validator(test_conv_to_int)
+                .help("The number of rooms to generate")
+        )
+        .arg(
+            Arg::with_name("room_size")
+                .long("room-size")
+                .takes_value(true)
+                .default_value("10")
+                .value_name("INT")
+                .validator(test_conv_to_int)
+                .help("The size of generated rooms")
+        )
         .get_matches();
 
     // Unpack our arguments
     let style = cli.value_of("map-style").unwrap();
     let width: usize = cli.value_of("width").unwrap().parse().unwrap();
     let height: usize = cli.value_of("height").unwrap().parse().unwrap();
+    let scale: usize = cli.value_of("scale").unwrap().parse().unwrap();
+    let filename: String = cli.value_of("output").unwrap().parse().unwrap();
+    let num_rooms: i64 = cli.value_of("num_rooms").unwrap().parse().unwrap();
 
     // Initialize our map
     let mut map = GridMap::new(width, height);
@@ -62,7 +102,7 @@ fn main() {
     // Build map based on map type
     match style {
         "halls" => {
-            map.generate_dungeon(10);
+            map.generate_dungeon(num_rooms, 5);
             map.place_entrance_near((width / 2, height / 2))
                 .expect("width/height is outside of map");
         }
@@ -74,9 +114,8 @@ fn main() {
         _ => unreachable!(),
     }
 
-    let filename = "example.png";
-    let renderer = Renderer::new(&map, 25);
-    let result = renderer.draw_to_file("example.png");
+    let renderer = Renderer::new(&map, scale);
+    let result = renderer.draw_to_file(&filename);
 
     match result {
         Ok(_) => println!("Map generated: {}", filename),

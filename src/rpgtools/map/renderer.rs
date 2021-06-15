@@ -1,10 +1,13 @@
 use std::io::{Error, ErrorKind};
 use std::fs::read_to_string;
 
-use image::{RgbImage, RgbaImage, Rgba};
+use image::{RgbaImage, Rgba};
 
 use super::GridMap;
 use super::gridmap::AreaType;
+
+// Assets
+const FLOOR_STONE: &str = include_str!("assets/floor-stone.svg");
 
 
 pub struct Renderer {
@@ -115,8 +118,7 @@ impl Renderer {
                                         |p| p.parent().map(
                                             |p| p.to_path_buf()));
 
-        let svgdata = read_to_string("src/floor-stone.svg").expect("failed to open file");
-        let rtree = usvg::Tree::from_str(&svgdata, &options).unwrap();
+        let rtree = usvg::Tree::from_str(&FLOOR_STONE, &options).unwrap();
         let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
         resvg::render(&rtree, usvg::FitTo::Width(self.scale as u32), pixmap.as_mut()).unwrap();
 
