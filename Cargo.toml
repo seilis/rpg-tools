@@ -12,6 +12,7 @@ license = "GPL-3.0"
 
 [dependencies]
 clap = "^2.33"
+iced = "^0.3.0"
 image = "^0.23"
 itertools = "^0.10"
 rand = "^0.8"
