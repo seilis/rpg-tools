@@ -12,6 +12,9 @@
 //!
 //! This crate contains just the top-level declarations for the [iced](https://github.com/hecrj/iced) library; most of the actual
 //! implementation is in `rpgtools/gui` and the actual map logic and generation is in `rpgtools/map`.
+//!
+//! Note that this app borrows very heavily on the ideas and examples presented in iced's [Game of
+//! Life](https://github.com/hecrj/iced/blob/master/examples/game_of_life/src/main.rs) example.
 use iced::{
     Application,
     Clipboard,
@@ -25,18 +28,15 @@ use iced::{
     executor,
 };
 
+use rpgtools::gui::map::{Controls, Message};
+
 pub fn main() -> iced::Result {
     RpgMapGui::run(Settings::default())
 }
 
 /// Main state for the program
 struct RpgMapGui {
-}
-
-
-/// Internal GUI <-> State messages
-#[derive(Debug, Clone)]
-enum Message {
+    controls: Controls,
 }
 
 /// Iced Application implementation for the RPG Map GUI
@@ -54,6 +54,7 @@ impl Application for RpgMapGui {
     fn new(_flags: ()) -> (RpgMapGui, Command<Message>) {
         (
             RpgMapGui {
+                controls: Controls::default(),
             },
             Command::none(),
         )
@@ -80,8 +81,11 @@ impl Application for RpgMapGui {
     /// Method to draw the application
     fn view(&mut self) -> Element<Message> {
 
+        let controls = self.controls.view();
+
         let content = Column::new()
-            .spacing(20);
+            .spacing(20)
+            .push(controls);
 
         Container::new(content)
             .width(Length::Fill)
