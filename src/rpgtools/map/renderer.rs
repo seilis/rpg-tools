@@ -1,5 +1,4 @@
 use std::io::{Error, ErrorKind};
-use std::fs::read_to_string;
 
 use image::{RgbaImage, Rgba};
 
