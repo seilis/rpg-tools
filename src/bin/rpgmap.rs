@@ -7,7 +7,7 @@ use rpgtools::map::{GridMap, Renderer};
 
 /// Test whether an input string can be parsed as an int and return a Result
 /// as per clap's argument validation API.
-fn test_conv_to_int(val: String) -> Result<(), String> {
+fn test_conv_to_int(val: &str) -> Result<(), String> {
     let result = val.parse::<usize>();
     match result {
         Ok(_) => Ok(()),
@@ -22,7 +22,7 @@ fn main() {
         .about("A simple map generator for role playing games")
         .arg(
             Arg::with_name("width")
-                .short("x")
+                .short('x')
                 .long("width")
                 .takes_value(true)
                 .default_value("50")
@@ -32,7 +32,7 @@ fn main() {
         )
         .arg(
             Arg::with_name("height")
-                .short("y")
+                .short('y')
                 .long("height")
                 .takes_value(true)
                 .default_value("50")
@@ -42,7 +42,7 @@ fn main() {
         )
         .arg(
             Arg::with_name("map-style")
-                .short("s")
+                .short('s')
                 .long("style")
                 .takes_value(true)
                 .default_value("halls")
@@ -51,7 +51,7 @@ fn main() {
         )
         .arg(
             Arg::with_name("scale")
-                .short("S")
+                .short('S')
                 .long("scale")
                 .takes_value(true)
                 .default_value("25")
@@ -61,7 +61,7 @@ fn main() {
         )
         .arg(
             Arg::with_name("output")
-                .short("o")
+                .short('o')
                 .long("output")
                 .takes_value(true)
                 .default_value("rpgmap.png")

@@ -117,9 +117,12 @@ impl Renderer {
                                         |p| p.parent().map(
                                             |p| p.to_path_buf()));
 
-        let rtree = usvg::Tree::from_str(&FLOOR_STONE, &options).unwrap();
+        let rtree = usvg::Tree::from_str(&FLOOR_STONE, &options.to_ref()).unwrap();
         let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
-        resvg::render(&rtree, usvg::FitTo::Width(self.scale as u32), pixmap.as_mut()).unwrap();
+        resvg::render(&rtree, 
+                      usvg::FitTo::Width(self.scale as u32), 
+                      tiny_skia::Transform::identity(),
+                      pixmap.as_mut()).unwrap();
 
         let image = RgbaImage::from_vec(size as u32, size as u32, pixmap.take()).unwrap();
 
