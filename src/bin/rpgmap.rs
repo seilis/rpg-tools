@@ -1,7 +1,7 @@
 // rpgmap main source file
 //
 // Program for making simple RPG maps. This is the Rust language implementation.
-use clap::{App, Arg};
+use clap::{App, Arg, crate_version};
 
 use rpgtools::map::{GridMap, Renderer};
 
@@ -17,7 +17,7 @@ fn test_conv_to_int(val: &str) -> Result<(), String> {
 
 fn main() {
     let cli = App::new("RPG map generator")
-        .version("1.2.0")
+        .version(crate_version!())
         .author("Aaron Seilis <aaron.seilis@seilis.ca>")
         .about("A simple map generator for role playing games")
         .arg(
