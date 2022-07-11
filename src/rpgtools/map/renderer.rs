@@ -1,12 +1,15 @@
 use std::io::{Error, ErrorKind};
 
-use image::{RgbaImage, Rgba};
+use image::{RgbaImage, Rgba, imageops::rotate90};
+
+use rand::prelude::*;
 
 use super::GridMap;
 use super::gridmap::AreaType;
 
 // Assets
 const FLOOR_STONE: &str = include_str!("assets/floor-stone.svg");
+const FLOOR_STONE_2: &str = include_str!("assets/floor-stone-2.svg");
 
 
 pub struct Renderer {
@@ -44,7 +47,12 @@ impl Renderer {
                 };
 
                 if self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room {
-                    let sprite = self.get_floor_sprite(self.scale as usize).expect("failed to open file");
+                    let mut sprite = self.get_floor_sprite(self.scale as usize).expect("failed to open file");
+                    let mut rng = thread_rng();
+                    let dist = rand::distributions::Uniform::new_inclusive(0, 3);
+                    for _ in 0..rng.sample(dist) {
+                        sprite = rotate90(&sprite);
+                    }
                     self.draw_sprite_at(x, y, &mut img, &sprite);
                 } else {
                     // Loop through all of the pixels in the cell.
@@ -111,16 +119,25 @@ impl Renderer {
     /// Get a floor sprite as an RGBA image
     fn get_floor_sprite(&self, size: usize) -> Result<RgbaImage, std::io::Error> {
         let mut options = usvg::Options::default();
+        let mut rng = thread_rng();
+        let dist = rand::distributions::Uniform::new_inclusive(0, 1);
+
         options.resources_dir = std::fs::canonicalize("src/floor-stone.svg")
                                     .ok()
                                     .and_then(
                                         |p| p.parent().map(
                                             |p| p.to_path_buf()));
 
-        let rtree = usvg::Tree::from_str(&FLOOR_STONE, &options.to_ref()).unwrap();
+        let floor_img = match rng.sample(dist) {
+            0 => FLOOR_STONE,
+            1 => FLOOR_STONE_2,
+            _ => FLOOR_STONE,
+        };
+
+        let rtree = usvg::Tree::from_str(&floor_img, &options.to_ref()).unwrap();
         let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
-        resvg::render(&rtree, 
-                      usvg::FitTo::Width(self.scale as u32), 
+        resvg::render(&rtree,
+                      usvg::FitTo::Width(self.scale as u32),
                       tiny_skia::Transform::identity(),
                       pixmap.as_mut()).unwrap();
 
