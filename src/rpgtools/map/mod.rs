@@ -1,3 +1,4 @@
+//! Grid-based maps for dungeon layouts
 mod gridmap;
 pub use gridmap::GridMap;
 

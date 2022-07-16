@@ -19,6 +19,14 @@ use gridroom::GridRoom;
 // Need RouteMethod from rpgmap::route
 use super::route::RouteMethod;
 
+/// A map with grid coordinates
+///
+/// # Examples
+/// ```
+/// # use rpgtools::map::GridMap;
+/// // Make a map that's 25x25 cells in size.
+/// let map = GridMap::new(25, 25);
+/// ```
 #[derive(Clone, Debug)]
 pub struct GridMap {
     xmax  : usize,
@@ -28,6 +36,12 @@ pub struct GridMap {
 
 impl GridMap {
     /// Make a new GridMap
+    /// # Examples
+    /// ```
+    /// # use rpgtools::map::GridMap;
+    /// // Make a map that's 25x25 cells in size.
+    /// let map = GridMap::new(25, 25);
+    /// ```
     pub fn new(xmax: usize, ymax: usize) -> GridMap {
         GridMap {
             xmax,
@@ -37,10 +51,18 @@ impl GridMap {
     }
 
     /// Returns size of map in (x, y) format
+    ///
+    /// # Examples
+    /// ```
+    /// # let map = rpgtools::map::GridMap::new(25, 25);
+    /// let limits = map.get_limits();
+    /// assert_eq!(limits, (25, 25));
+    /// ```
     pub fn get_limits(&self) -> (usize, usize) {
         (self.xmax, self.ymax)
     }
 
+    /// Get a reference to a GridCell at coordinate.
     pub fn get_cell_ref(&self, x: usize, y: usize) -> &GridCell {
         &self.cells[x][y]
     }

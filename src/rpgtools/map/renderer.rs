@@ -1,3 +1,4 @@
+//! For rendering
 use std::io::{Error, ErrorKind};
 
 use image::{RgbaImage, Rgba, imageops::rotate90};
@@ -12,6 +13,7 @@ const FLOOR_STONE: &str = include_str!("assets/floor-stone.svg");
 const FLOOR_STONE_2: &str = include_str!("assets/floor-stone-2.svg");
 
 
+/// A renderer that can take a map and draw it to a file
 pub struct Renderer {
     map   : GridMap,
     scale : u32,

@@ -1,11 +1,14 @@
-// Routing
+/// How paths are placed
 #[derive(Debug)]
 pub enum RouteMethod {
-    HorizontalFirst, // Manhattan routing; Horizontal direction first
-    VerticalFirst,   // Manhattan routing; Vertical direction first
-    //    Direct,          // Straight line/diagonal routing
-    Manhattan, // Split route into horizontal and vertical components
-               // do them one at a time.
-               //    Subway,          // Subway-map style (or circuit-board style, if you prefer).
-               // Allows routes at 0 degrees, 90 degrees and 45 degrees.
+    /// Manhattan routing; horizontal direction first.
+    HorizontalFirst,
+    /// Manhattan routing; vertical direction first.
+    VerticalFirst,
+    // Straight-line/diagonal routing
+    //Direct,
+    /// Split route into horizontal and vertical components and do them one at a time.
+    Manhattan,
+    // Subway-map style: allows routes at 0 degrees, 90 degrees and 45 degrees.
+    //Subway,
 }
