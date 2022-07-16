@@ -24,9 +24,7 @@ pub enum PointType {
 /// Representation of a GridCell, which is a single unit in a grid.
 #[derive(Clone, Debug)]
 pub struct GridCell {
-    // Accessable_t (Python) not needed in Rust. We'll use an
-    // Option<bool> to represent that.
-    accessable: Option<bool>,
+    /// The type of area contained within this sell
     pub area: AreaType,
     vert_wall: WallType,
     horiz_wall: WallType,
@@ -37,7 +35,6 @@ impl GridCell {
     /// Construct a new GridCell
     pub fn new() -> GridCell {
         GridCell {
-            accessable: None,
             area: AreaType::Nothing,
             vert_wall: WallType::Nothing,
             horiz_wall: WallType::Nothing,
