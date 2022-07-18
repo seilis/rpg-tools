@@ -12,19 +12,25 @@ use super::gridmap::AreaType;
 const FLOOR_STONE: &str = include_str!("assets/floor-stone.svg");
 const FLOOR_STONE_2: &str = include_str!("assets/floor-stone-2.svg");
 
-
 /// A renderer that can take a map and draw it to a file
 pub struct Renderer {
     map   : GridMap,
     scale : u32,
+
+    /// Rendered assets
+    assets : Vec<RgbaImage>,
 }
 
 impl Renderer {
     pub fn new(map: &GridMap, scale: usize) -> Renderer {
-        Renderer {
+        let mut new = Renderer {
             map: map.to_owned(),
             scale: scale as u32,
-        }
+            assets: vec![],
+        };
+
+        new.render_sprites(scale);
+        new
     }
 
     pub fn draw_to_file(&self, filename: &str) -> Result<(), std::io::Error> {
@@ -120,32 +126,40 @@ impl Renderer {
 
     /// Get a floor sprite as an RGBA image
     fn get_floor_sprite(&self, size: usize) -> Result<RgbaImage, std::io::Error> {
-        let mut options = usvg::Options::default();
         let mut rng = thread_rng();
         let dist = rand::distributions::Uniform::new_inclusive(0, 1);
+        let sample = rng.sample(dist);
 
-        options.resources_dir = std::fs::canonicalize("src/floor-stone.svg")
-                                    .ok()
-                                    .and_then(
-                                        |p| p.parent().map(
-                                            |p| p.to_path_buf()));
 
-        let floor_img = match rng.sample(dist) {
-            0 => FLOOR_STONE,
-            1 => FLOOR_STONE_2,
-            _ => FLOOR_STONE,
-        };
+        if sample < self.assets.len() {
+            return Ok(self.assets[sample].clone());
+        }
 
-        let rtree = usvg::Tree::from_str(&floor_img, &options.to_ref()).unwrap();
-        let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
-        resvg::render(&rtree,
-                      usvg::FitTo::Width(self.scale as u32),
-                      tiny_skia::Transform::identity(),
-                      pixmap.as_mut()).unwrap();
+        Err(std::io::Error::new(std::io::ErrorKind::NotFound, ":-("))
+    }
 
-        let image = RgbaImage::from_vec(size as u32, size as u32, pixmap.take()).unwrap();
+    fn render_sprites(&mut self, size: usize) -> Result<(), std::io::Error> {
+        let sprites_raw = [FLOOR_STONE, FLOOR_STONE_2];
 
-        Ok(image)
+        for sprite in sprites_raw {
+            let mut options = usvg::Options::default();
+            options.resources_dir = std::fs::canonicalize("src/floor-stone.svg")
+                                        .ok()
+                                        .and_then(
+                                            |p| p.parent().map(
+                                                |p| p.to_path_buf()));
+
+            let rtree = usvg::Tree::from_str(&sprite, &options.to_ref()).unwrap();
+            let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
+            resvg::render(&rtree,
+                          usvg::FitTo::Width(self.scale as u32),
+                          tiny_skia::Transform::identity(),
+                          pixmap.as_mut()).unwrap();
+
+            let image = RgbaImage::from_vec(size as u32, size as u32, pixmap.take()).unwrap();
+            self.assets.push(image);
+        }
+        Ok(())
     }
 
     /// Draw a sprite into a location in the image
