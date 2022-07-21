@@ -1,1 +1,0 @@
-"""RPG Map Package"""
