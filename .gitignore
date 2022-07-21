@@ -43,3 +43,8 @@ target/
 # Testing output
 example.png
 rpgmap.png
+
+# Profiling output
+flamegraph.svg
+perf.data
+perf.data.old
