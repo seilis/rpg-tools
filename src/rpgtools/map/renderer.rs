@@ -29,7 +29,7 @@ impl Renderer {
             assets: vec![],
         };
 
-        new.render_sprites(scale);
+        new.render_sprites(scale).expect("unable to render sprites, aborting");
         new
     }
 
@@ -55,7 +55,7 @@ impl Renderer {
                 };
 
                 if self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room {
-                    let mut sprite = self.get_floor_sprite(self.scale as usize).expect("failed to open file");
+                    let mut sprite = self.get_floor_sprite().expect("failed to open file");
                     let mut rng = thread_rng();
                     let dist = rand::distributions::Uniform::new_inclusive(0, 3);
                     for _ in 0..rng.sample(dist) {
@@ -125,7 +125,7 @@ impl Renderer {
     }
 
     /// Get a floor sprite as an RGBA image
-    fn get_floor_sprite(&self, size: usize) -> Result<RgbaImage, std::io::Error> {
+    fn get_floor_sprite(&self) -> Result<RgbaImage, std::io::Error> {
         let mut rng = thread_rng();
         let dist = rand::distributions::Uniform::new_inclusive(0, 1);
         let sample = rng.sample(dist);
