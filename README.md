@@ -9,11 +9,6 @@ Currently `rpgmap` is the only available tool but more are planned:
 * World-map generator
 * ... (ideas welcome)
 
-This program currently has 2 implementations: a primary one in Rust and a
-secondary one in Python. Initially, this was an implementation test to compare
-speed and code size. This is slowly going to migrate into an implementation in
-Rust and a Python wrapper library.
-
 ## RPG Map
 `rpgmap` is a grid-based map generator. This is the primary tool available
 right now.
