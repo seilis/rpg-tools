@@ -221,11 +221,7 @@ impl GridMap {
         // If we found a room then we need to make a copy of the value
         // that's found there. x.choose() returns a reference and not
         // the value itself.
-        if let Some(idx) = rooms.choose(&mut rng) {
-            Some(*idx)
-        } else {
-            None
-        }
+        rooms.choose(&mut rng).copied()
     }
 
     /// Generate random cells with a biasing towards more/less rooms. Limit is a value
@@ -407,9 +403,7 @@ impl GridMap {
 
             // If we have visited this cell before or it is not a "room" then
             // we should stop processing and move on to the next
-            if visited[x * self.xmax + y] {
-                continue;
-            } else if self.cells[x][y].area != AreaType::Room {
+            if visited[x * self.xmax + y] || self.cells[x][y].area != AreaType::Room {
                 continue;
             }
 

@@ -42,7 +42,7 @@ impl Renderer {
         let xmax = xmax as u32;
         let ymax = ymax as u32;
 
-        let mut img = RgbaImage::new((xmax * self.scale) as u32, (ymax * self.scale) as u32);
+        let mut img = RgbaImage::new(xmax * self.scale, ymax * self.scale);
 
         // Loop through all of our cells
         for x in 0..xmax {
@@ -140,16 +140,18 @@ impl Renderer {
         let sprites_raw = [FLOOR_STONE, FLOOR_STONE_2];
 
         for sprite in sprites_raw {
-            let mut options = usvg::Options::default();
-            options.resources_dir = std::fs::canonicalize("src/floor-stone.svg")
-                .ok()
-                .and_then(|p| p.parent().map(|p| p.to_path_buf()));
+            let options = usvg::Options {
+                resources_dir: std::fs::canonicalize("src/floor-stone.svg")
+                    .ok()
+                    .and_then(|p| p.parent().map(|p| p.to_path_buf())),
+                ..Default::default()
+            };
 
-            let rtree = usvg::Tree::from_str(&sprite, &options.to_ref()).unwrap();
+            let rtree = usvg::Tree::from_str(sprite, &options.to_ref()).unwrap();
             let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
             resvg::render(
                 &rtree,
-                usvg::FitTo::Width(self.scale as u32),
+                usvg::FitTo::Width(self.scale),
                 tiny_skia::Transform::identity(),
                 pixmap.as_mut(),
             )
