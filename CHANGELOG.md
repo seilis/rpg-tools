@@ -1,5 +1,16 @@
 # Change Log
 
+## v1.3.0
+
+### Updated
+
+- Updated all dependencies to their latest version.
+
+### Fixed
+
+- Numerous formatting and clippy issues.
+
+
 ## v1.2.0
 
 ### Added

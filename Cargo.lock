@@ -688,7 +688,7 @@ dependencies = [
 
 [[package]]
 name = "rpgtools"
-version = "1.3.0-alpha0"
+version = "1.3.0"
 dependencies = [
  "clap",
  "image",
