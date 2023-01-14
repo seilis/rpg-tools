@@ -71,7 +71,8 @@ fn main() {
     // Unpack our arguments
     let style: String = cli
         .get_one::<String>("map-style")
-        .expect("failed to get style; this is a bug").to_string();
+        .expect("failed to get style; this is a bug")
+        .to_string();
     let width: usize = *cli
         .get_one::<u64>("width")
         .expect("failed to get width; this is a bug") as usize;

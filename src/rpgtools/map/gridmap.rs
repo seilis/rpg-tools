@@ -29,9 +29,9 @@ use super::route::RouteMethod;
 /// ```
 #[derive(Clone, Debug)]
 pub struct GridMap {
-    xmax  : usize,
-    ymax  : usize,
-    cells : Vec<Vec<GridCell>>,
+    xmax: usize,
+    ymax: usize,
+    cells: Vec<Vec<GridCell>>,
 }
 
 impl GridMap {
@@ -315,9 +315,14 @@ impl GridMap {
                     continue;
                 }
 
-                let (cell0, cell1) = room0.nearest_cells(room1).expect("finding nearest cells failed");
+                let (cell0, cell1) = room0
+                    .nearest_cells(room1)
+                    .expect("finding nearest cells failed");
 
-                if (cell0.0 as isize - cell1.0 as isize).pow(2) + (cell0.1 as isize - cell1.1 as isize).pow(2) < distance {
+                if (cell0.0 as isize - cell1.0 as isize).pow(2)
+                    + (cell0.1 as isize - cell1.1 as isize).pow(2)
+                    < distance
+                {
                     self.place_hallway(cell0, cell1, RouteMethod::Manhattan);
                 }
             }
@@ -325,7 +330,6 @@ impl GridMap {
             rooms = self.partition_rooms();
             distance += 150;
         }
-
     }
 
     /// Determine if i, or j lies on an edge.
@@ -468,9 +472,14 @@ impl GridMap {
             let cave = caves_combo[0];
             let cave2 = caves_combo[1];
 
-            let (cell1, cell2) = cave.nearest_cells(cave2).expect("finding nearest cells failed");
+            let (cell1, cell2) = cave
+                .nearest_cells(cave2)
+                .expect("finding nearest cells failed");
 
-            if (cell1.0 as isize - cell2.0 as isize).pow(2) + (cell1.1 as isize - cell2.1 as isize).pow(2) < 36 {
+            if (cell1.0 as isize - cell2.0 as isize).pow(2)
+                + (cell1.1 as isize - cell2.1 as isize).pow(2)
+                < 36
+            {
                 self.place_hallway(cell1, cell2, RouteMethod::Manhattan);
             }
         }

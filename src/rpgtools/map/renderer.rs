@@ -1,12 +1,12 @@
 //! For rendering
 use std::io::{Error, ErrorKind};
 
-use image::{RgbaImage, Rgba, imageops::rotate90};
+use image::{imageops::rotate90, Rgba, RgbaImage};
 
 use rand::prelude::*;
 
-use super::GridMap;
 use super::gridmap::AreaType;
+use super::GridMap;
 
 // Assets
 const FLOOR_STONE: &str = include_str!("assets/floor-stone.svg");
@@ -14,11 +14,11 @@ const FLOOR_STONE_2: &str = include_str!("assets/floor-stone-2.svg");
 
 /// A renderer that can take a map and draw it to a file
 pub struct Renderer {
-    map   : GridMap,
-    scale : u32,
+    map: GridMap,
+    scale: u32,
 
     /// Rendered assets
-    assets : Vec<RgbaImage>,
+    assets: Vec<RgbaImage>,
 }
 
 impl Renderer {
@@ -29,7 +29,8 @@ impl Renderer {
             assets: vec![],
         };
 
-        new.render_sprites(scale).expect("unable to render sprites, aborting");
+        new.render_sprites(scale)
+            .expect("unable to render sprites, aborting");
         new
     }
 
@@ -41,7 +42,7 @@ impl Renderer {
         let xmax = xmax as u32;
         let ymax = ymax as u32;
 
-        let mut img = RgbaImage::new((xmax*self.scale) as u32, (ymax*self.scale) as u32);
+        let mut img = RgbaImage::new((xmax * self.scale) as u32, (ymax * self.scale) as u32);
 
         // Loop through all of our cells
         for x in 0..xmax {
@@ -64,8 +65,8 @@ impl Renderer {
                     self.draw_sprite_at(x, y, &mut img, &sprite);
                 } else {
                     // Loop through all of the pixels in the cell.
-                    for x_pixel in x*self.scale .. x*self.scale+self.scale {
-                        for y_pixel in y*self.scale .. y*self.scale+self.scale {
+                    for x_pixel in x * self.scale..x * self.scale + self.scale {
+                        for y_pixel in y * self.scale..y * self.scale + self.scale {
                             img.put_pixel(x_pixel, y_pixel, color);
                         }
                     }
@@ -76,10 +77,9 @@ impl Renderer {
                     && self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room
                     && self.map.get_cell_ref(x as usize + 1, y as usize).area == AreaType::Room
                 {
-                    let x_pixel = (x+1)*self.scale - 1;
-                    for y_pixel in y*self.scale .. (y+1)*self.scale {
+                    let x_pixel = (x + 1) * self.scale - 1;
+                    for y_pixel in y * self.scale..(y + 1) * self.scale {
                         img.put_pixel(x_pixel, y_pixel, GRID_SEP_COLOUR);
-
                     }
                 }
                 if x > 0
@@ -88,28 +88,27 @@ impl Renderer {
                 {
                     // Explanation is the same as above but now it's the first
                     // pixel in our box
-                    let x_pixel = x*self.scale;
-                    for y_pixel in y*self.scale .. (y+1)*self.scale {
+                    let x_pixel = x * self.scale;
+                    for y_pixel in y * self.scale..(y + 1) * self.scale {
                         img.put_pixel(x_pixel, y_pixel, GRID_SEP_COLOUR);
-
                     }
                 }
                 if y < ymax - 1
                     && self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room
-                    && self.map.get_cell_ref(x as usize, y as usize +1).area == AreaType::Room
+                    && self.map.get_cell_ref(x as usize, y as usize + 1).area == AreaType::Room
                 {
-                    let y_pixel = (y+1)*self.scale - 1;
-                    for x_pixel in x*self.scale .. (x+1)*self.scale {
+                    let y_pixel = (y + 1) * self.scale - 1;
+                    for x_pixel in x * self.scale..(x + 1) * self.scale {
                         img.put_pixel(x_pixel, y_pixel, GRID_SEP_COLOUR);
                     }
                 }
                 if y > 0
                     && self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room
-                    && self.map.get_cell_ref(x as usize, y as usize-1).area == AreaType::Room
+                    && self.map.get_cell_ref(x as usize, y as usize - 1).area == AreaType::Room
                 {
                     // Explanation is the same as above.
-                    let y_pixel = y*self.scale;
-                    for x_pixel in x*self.scale .. (x+1)*self.scale {
+                    let y_pixel = y * self.scale;
+                    for x_pixel in x * self.scale..(x + 1) * self.scale {
                         img.put_pixel(x_pixel, y_pixel, GRID_SEP_COLOUR);
                     }
                 }
@@ -130,7 +129,6 @@ impl Renderer {
         let dist = rand::distributions::Uniform::new_inclusive(0, 1);
         let sample = rng.sample(dist);
 
-
         if sample < self.assets.len() {
             return Ok(self.assets[sample].clone());
         }
@@ -144,17 +142,18 @@ impl Renderer {
         for sprite in sprites_raw {
             let mut options = usvg::Options::default();
             options.resources_dir = std::fs::canonicalize("src/floor-stone.svg")
-                                        .ok()
-                                        .and_then(
-                                            |p| p.parent().map(
-                                                |p| p.to_path_buf()));
+                .ok()
+                .and_then(|p| p.parent().map(|p| p.to_path_buf()));
 
             let rtree = usvg::Tree::from_str(&sprite, &options.to_ref()).unwrap();
             let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
-            resvg::render(&rtree,
-                          usvg::FitTo::Width(self.scale as u32),
-                          tiny_skia::Transform::identity(),
-                          pixmap.as_mut()).unwrap();
+            resvg::render(
+                &rtree,
+                usvg::FitTo::Width(self.scale as u32),
+                tiny_skia::Transform::identity(),
+                pixmap.as_mut(),
+            )
+            .unwrap();
 
             let image = RgbaImage::from_vec(size as u32, size as u32, pixmap.take()).unwrap();
             self.assets.push(image);
@@ -168,7 +167,7 @@ impl Renderer {
         let base_y = y * self.scale;
 
         for (px, py, pixel) in sprite.enumerate_pixels() {
-            image.put_pixel(base_x+px, base_y+py, *pixel);
+            image.put_pixel(base_x + px, base_y + py, *pixel);
         }
     }
 }
