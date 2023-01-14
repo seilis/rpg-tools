@@ -147,7 +147,7 @@ impl Renderer {
                 ..Default::default()
             };
 
-            let rtree = usvg::Tree::from_str(sprite, &options.to_ref()).unwrap();
+            let rtree = usvg::Tree::from_str(sprite, &options).unwrap();
             let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
             resvg::render(
                 &rtree,
