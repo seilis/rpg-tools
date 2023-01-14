@@ -1,106 +1,99 @@
-// rpgmap main source file
-//
-// Program for making simple RPG maps. This is the Rust language implementation.
-use clap::{App, Arg, crate_version};
+//! Program for making simple RPG maps. This is the Rust language implementation.
+use clap::{command, value_parser, Arg};
 
 use rpgtools::map::{GridMap, Renderer};
 
-/// Test whether an input string can be parsed as an int and return a Result
-/// as per clap's argument validation API.
-fn test_conv_to_int(val: &str) -> Result<(), String> {
-    let result = val.parse::<usize>();
-    match result {
-        Ok(_) => Ok(()),
-        Err(_) => Err(String::from("The value must be an integer")),
-    }
-}
-
 fn main() {
-    let cli = App::new("RPG map generator")
-        .version(crate_version!())
+    let cli = command!()
         .author("Aaron Seilis <aaron.seilis@seilis.ca>")
         .about("A simple map generator for role playing games")
         .arg(
-            Arg::with_name("width")
+            Arg::new("width")
                 .short('x')
                 .long("width")
-                .takes_value(true)
                 .default_value("50")
                 .value_name("INT")
-                .validator(test_conv_to_int)
+                .value_parser(value_parser!(u64).range(1..))
                 .help("The horizontal width of the map"),
         )
         .arg(
-            Arg::with_name("height")
+            Arg::new("height")
                 .short('y')
                 .long("height")
-                .takes_value(true)
                 .default_value("50")
                 .value_name("INT")
-                .validator(test_conv_to_int)
+                .value_parser(value_parser!(u64).range(1..))
                 .help("The vertical height of the map"),
         )
         .arg(
-            Arg::with_name("map-style")
+            Arg::new("map-style")
                 .short('s')
                 .long("style")
-                .takes_value(true)
                 .default_value("halls")
-                .possible_values(&["halls", "cave"])
+                .value_parser(["halls", "cave"])
                 .help("The style of map to generate"),
         )
         .arg(
-            Arg::with_name("scale")
+            Arg::new("scale")
                 .short('S')
                 .long("scale")
-                .takes_value(true)
                 .default_value("25")
                 .value_name("INT")
-                .validator(test_conv_to_int)
+                .value_parser(value_parser!(u64).range(1..))
                 .help("The number of pixels for each square"),
         )
         .arg(
-            Arg::with_name("output")
+            Arg::new("output")
                 .short('o')
                 .long("output")
-                .takes_value(true)
                 .default_value("rpgmap.png")
                 .value_name("NAME")
                 .help("The name of the output file"),
         )
         .arg(
-            Arg::with_name("num_rooms")
+            Arg::new("num_rooms")
                 .long("num-rooms")
-                .takes_value(true)
                 .default_value("30")
                 .value_name("INT")
-                .validator(test_conv_to_int)
-                .help("The number of rooms to generate")
+                .value_parser(value_parser!(u64).range(1..))
+                .help("The number of rooms to generate"),
         )
         .arg(
-            Arg::with_name("room_size")
+            Arg::new("room_size")
                 .long("room-size")
-                .takes_value(true)
                 .default_value("10")
                 .value_name("INT")
-                .validator(test_conv_to_int)
-                .help("The size of generated rooms")
+                .value_parser(value_parser!(u64).range(1..))
+                .help("The size of generated rooms"),
         )
         .get_matches();
 
     // Unpack our arguments
-    let style = cli.value_of("map-style").unwrap();
-    let width: usize = cli.value_of("width").unwrap().parse().unwrap();
-    let height: usize = cli.value_of("height").unwrap().parse().unwrap();
-    let scale: usize = cli.value_of("scale").unwrap().parse().unwrap();
-    let filename: String = cli.value_of("output").unwrap().parse().unwrap();
-    let num_rooms: i64 = cli.value_of("num_rooms").unwrap().parse().unwrap();
+    let style: String = cli
+        .get_one::<String>("map-style")
+        .expect("failed to get style; this is a bug").to_string();
+    let width: usize = *cli
+        .get_one::<u64>("width")
+        .expect("failed to get width; this is a bug") as usize;
+    let height: usize = *cli
+        .get_one::<u64>("height")
+        .expect("failed to get height; this is a bug") as usize;
+    let scale: usize = *cli
+        .get_one::<u64>("scale")
+        .expect("failed to get scale; this is a bug") as usize;
+    let filename: String = cli
+        .get_one::<String>("output")
+        .expect("failed to get filename; this is a bug")
+        .to_string();
+    let num_rooms: usize = *cli
+        .get_one::<u64>("num_rooms")
+        .expect("failed to get num_rooms; this is a bug") as usize;
 
     // Initialize our map
     let mut map = GridMap::new(width, height);
 
     // Build map based on map type
-    match style {
+    match style.as_str() {
         "halls" => {
             map.generate_dungeon(num_rooms, 5);
             map.place_entrance_near((width / 2, height / 2))

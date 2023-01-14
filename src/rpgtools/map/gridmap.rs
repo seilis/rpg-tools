@@ -298,9 +298,9 @@ impl GridMap {
         self.place_room((xmin, ymin), (xmax, ymax));
     }
 
-    pub fn generate_dungeon(&mut self, num_rooms: i64, room_size: i64) {
+    pub fn generate_dungeon(&mut self, num_rooms: usize, room_size: usize) {
         for _ in 0..num_rooms {
-            self.place_random_room(room_size as usize, false);
+            self.place_random_room(room_size, false);
         }
 
         let mut rooms = self.partition_rooms();
