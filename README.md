@@ -54,23 +54,18 @@ cargo build --release
 For argument descriptions:
 ```
 $ rpgmap --help
-RPG map generator 1.2.0
-Aaron Seilis <aaron.seilis@seilis.ca>
 A simple map generator for role playing games
 
-USAGE:
-    rpgmap [OPTIONS]
+Usage: rpgmap [OPTIONS]
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -y, --height <INT>         The vertical height of the map [default: 50]
-    -s, --style <map-style>    The style of map to generate [default: halls]  [possible values: halls, cave]
-        --num-rooms <INT>      The number of rooms to generate [default: 30]
-    -o, --output <NAME>        The name of the output file [default: rpgmap.png]
-        --room-size <INT>      The size of generated rooms [default: 10]
-    -S, --scale <INT>          The number of pixels for each square [default: 25]
-    -x, --width <INT>          The horizontal width of the map [default: 50]
+Options:
+  -x, --width <INT>        The horizontal width of the map [default: 50]
+  -y, --height <INT>       The vertical height of the map [default: 50]
+  -s, --style <map-style>  The style of map to generate [default: halls] [possible values: halls, cave]
+  -S, --scale <INT>        The number of pixels for each square [default: 25]
+  -o, --output <NAME>      The name of the output file [default: rpgmap.png]
+      --num-rooms <INT>    The number of rooms to generate [default: 30]
+      --room-size <INT>    The size of generated rooms [default: 10]
+  -h, --help               Print help
+  -V, --version            Print version
 ```
