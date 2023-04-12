@@ -11,13 +11,13 @@ categories  = ["games"]
 license     = "GPL-3.0"
 
 [dependencies]
-clap      = {version = "^4.1", features = ["cargo"]}
-image     = "^0.24.5"
+clap      = {version = "^4.2", features = ["cargo"]}
+image     = "^0.24.6"
 itertools = "^0.10.5"
 rand      = "^0.8.5"
-resvg     = "^0.28.0"
-tiny-skia = "^0.8.2"
-usvg      = "^0.28.0"
+resvg     = "^0.30.0"
+tiny-skia = "^0.8.3"
+usvg      = "^0.30.0"
 
 [[bin]]
 name = "rpgmap"
@@ -26,3 +26,6 @@ path = "src/bin/rpgmap.rs"
 [lib]
 name = "rpgtools"
 path = "src/rpgtools/lib.rs"
+
+[profile.release]
+debug = true
