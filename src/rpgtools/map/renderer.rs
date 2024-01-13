@@ -150,13 +150,8 @@ impl Renderer {
 
             let rtree = usvg::Tree::from_str(sprite, &options).unwrap();
             let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
-            resvg::render(
-                &rtree,
-                resvg::FitTo::Width(self.scale),
-                tiny_skia::Transform::identity(),
-                pixmap.as_mut(),
-            )
-            .unwrap();
+            let render_tree = resvg::Tree::from_usvg(&rtree);
+            render_tree.render(tiny_skia::Transform::identity(), &mut pixmap.as_mut());
 
             let image = RgbaImage::from_vec(size as u32, size as u32, pixmap.take()).unwrap();
             self.assets.push(image);
