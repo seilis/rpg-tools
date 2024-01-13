@@ -12,7 +12,7 @@ license     = "GPL-3.0"
 
 [dependencies]
 clap      = {version = "^4.4.16", features = ["cargo"]}
-image     = "^0.24.6"
+image     = "^0.24.7"
 itertools = "^0.10.5"
 rand      = "^0.8.5"
 resvg     = "^0.30.0"
