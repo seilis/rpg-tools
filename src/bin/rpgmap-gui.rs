@@ -135,34 +135,38 @@ impl eframe::App for RpgMapGui {
 
             let (num_x, num_y) = self.map.get_limits();
 
-            for x in 0..num_x {
-                for y in 0..num_y {
-                    let cell_x = x as f32 * cell_size;
-                    let cell_y = y as f32 * cell_size;
+            egui::ScrollArea::both().show(ui, |ui| {
+                let scroll_offset = ui.cursor().left_top();
 
-                    let cell = ui.allocate_rect(
-                        egui::Rect::from_min_size(
-                            egui::pos2(cell_x, cell_y),
-                            egui::vec2(cell_size, cell_size),
-                        ),
-                        egui::Sense::drag(), // "click_and_drag" has latency
-                    );
+                for x in 0..num_x {
+                    for y in 0..num_y {
+                        let cell_x = scroll_offset.x + x as f32 * cell_size;
+                        let cell_y = scroll_offset.y + y as f32 * cell_size;
 
-                    let map_cell = self.map.get_cell_ref(x, y);
+                        let cell = ui.allocate_rect(
+                            egui::Rect::from_min_size(
+                                egui::pos2(cell_x, cell_y),
+                                egui::vec2(cell_size, cell_size),
+                            ),
+                            egui::Sense::drag(), // "click_and_drag" has latency
+                        );
+
+                        let map_cell = self.map.get_cell_ref(x, y);
 
 
-                    let color = if map_cell.is_room() {
-                        egui::Color32::LIGHT_GRAY
-                    } else {
-                        egui::Color32::DARK_GRAY
-                    };
+                        let color = if map_cell.is_room() {
+                            egui::Color32::LIGHT_GRAY
+                        } else {
+                            egui::Color32::DARK_GRAY
+                        };
 
-                    ui.painter().rect_filled(cell.rect, 0.0, color);
+                        ui.painter().rect_filled(cell.rect, 0.0, color);
 
-                    // Draw the grid
-                    ui.painter().rect_stroke(cell.rect, 0.0, egui::Stroke::new(1.0, egui::Color32::BLACK));
+                        // Draw the grid
+                        ui.painter().rect_stroke(cell.rect, 0.0, egui::Stroke::new(1.0, egui::Color32::BLACK));
+                    }
                 }
-            }
+            });
         });
     }
 }
