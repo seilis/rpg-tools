@@ -75,6 +75,11 @@ impl GridCell {
             }
         )
     }
+
+    /// Get the type of area that this cell represents
+    pub fn area(&self) -> &AreaType {
+        &self.area
+    }
 }
 
 impl Default for GridCell {
