@@ -3,6 +3,7 @@ use clap::{command, value_parser, Arg};
 use egui;
 
 use rpgtools::map::{GridMap, Renderer};
+use rpgtools::map::gridmap::AreaType;
 
 fn main() {
     let cli = command!()
@@ -153,11 +154,10 @@ impl eframe::App for RpgMapGui {
 
                         let map_cell = self.map.get_cell_ref(x, y);
 
-
-                        let color = if map_cell.is_room() {
-                            egui::Color32::LIGHT_GRAY
-                        } else {
-                            egui::Color32::DARK_GRAY
+                        let color = match map_cell.area() {
+                            AreaType::Room => egui::Color32::LIGHT_GRAY,
+                            AreaType::Entrance => egui::Color32::RED,
+                            AreaType::Nothing => egui::Color32::DARK_GRAY,
                         };
 
                         ui.painter().rect_filled(cell.rect, 0.0, color);
@@ -170,3 +170,6 @@ impl eframe::App for RpgMapGui {
         });
     }
 }
+
+
+
