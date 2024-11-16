@@ -300,6 +300,8 @@ impl GridMap {
     }
 
     pub fn generate_dungeon(&mut self, num_rooms: usize, room_size: usize) {
+        self.clear();
+
         for _ in 0..num_rooms {
             self.place_random_room(room_size, false);
         }
@@ -581,5 +583,31 @@ impl GridMap {
 
         // Room processing is done. Return.
         out
+    }
+
+    /// Delete everything in this map and reset to nothing
+    fn clear(&mut self) {
+        for x in 0..self.xmax {
+            for y in 0..self.ymax {
+                self.cells[x][y].area = AreaType::Nothing;
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    /// Ensure that regenerating halls multiple times doesn't hang
+    #[test]
+    fn regenerate_dungeon() {
+        let mut map = GridMap::new(25, 25);
+
+        // This used to fail due to an infinite loop in the halls algorithm.
+        for _ in 0..10 {
+            map.generate_dungeon(10, 10);
+        }
     }
 }
