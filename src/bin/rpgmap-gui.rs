@@ -131,6 +131,30 @@ impl RpgMapGui {
 
 impl eframe::App for RpgMapGui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::TopBottomPanel::top("menu").show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("File", |ui| {
+                    if ui.button("Save").clicked() {
+                        // TODO: SAVE!
+                    }
+                });
+                ui.menu_button("Generate", |ui| {
+                    if ui.button("Dungeon").clicked() {
+                        // Generate a dungeon!
+                        self.map.generate_dungeon(10, 5);
+                        self.map.place_entrance_near((0, 0));
+                    }
+
+                    if ui.button("Cave").clicked() {
+                        // Generate a cave!
+                        self.map.generate_cave(4, 50);
+                        self.map.place_entrance_near((0, 0));
+                    }
+                });
+            });
+        });
+
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let cell_size = 20.0;
 
