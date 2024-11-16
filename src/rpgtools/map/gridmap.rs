@@ -95,6 +95,11 @@ impl GridMap {
     }
 
     /// Set a room
+    ///
+    /// The room is specified by two sets of coordinates. The coordinates specify the bounds of the
+    /// resulting room. The X-axis location of the room is the two specified X coordinates and all
+    /// of the cells in between them. The Y-axis location of the room is the two specified Y
+    /// coordinates and all of the cells in between them.
     pub fn place_room(&mut self, (x0, y0): (usize, usize), (x1, y1): (usize, usize)) {
         // For lower bounds, note that 0 is implicit lower bound in usize
         let x_lower = cmp::min(x0, x1); // Calculate the lower bound of x
