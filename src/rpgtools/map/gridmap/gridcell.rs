@@ -80,6 +80,11 @@ impl GridCell {
     pub fn area(&self) -> &AreaType {
         &self.area
     }
+
+    /// Set the type of area that this cell represents
+    pub fn set_area(&mut self, area: AreaType) {
+        self.area = area;
+    }
 }
 
 impl Default for GridCell {

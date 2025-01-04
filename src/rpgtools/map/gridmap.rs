@@ -67,6 +67,11 @@ impl GridMap {
         &self.cells[x][y]
     }
 
+    /// Get a mutable reference to a GridCell at coordinate.
+    pub fn get_cell_mut(&mut self, x: usize, y: usize) -> &mut GridCell {
+        &mut self.cells[x][y]
+    }
+
     /// Set the entrance at a particular location. The cell at this location
     /// will be marked as having the entrance area type. Typically this will
     /// be coloured differently on a map.

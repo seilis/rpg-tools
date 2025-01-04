@@ -81,13 +81,6 @@ fn main() {
     let height: usize = *cli
         .get_one::<u64>("height")
         .expect("failed to get height; this is a bug") as usize;
-    let scale: usize = *cli
-        .get_one::<u64>("scale")
-        .expect("failed to get scale; this is a bug") as usize;
-    let filename: String = cli
-        .get_one::<String>("output")
-        .expect("failed to get filename; this is a bug")
-        .to_string();
     let num_rooms: usize = *cli
         .get_one::<u64>("num_rooms")
         .expect("failed to get num_rooms; this is a bug") as usize;
@@ -118,13 +111,33 @@ fn main() {
     );
 }
 
+enum Tool {
+    CellPainter(AreaType),
+    // Move
+    // CellSelection
+    // ???
+}
+
+impl Default for Tool {
+    fn default() -> Self {
+        Self::CellPainter(AreaType::Room)
+    }
+}
+
 struct RpgMapGui {
+    // Map state
     map: GridMap,
+    // Current Tool selection
+    tool: Tool,
+    // Mouse state
+    dragging: bool,
 }
 
 impl RpgMapGui {
     fn new(map: GridMap) -> Self {
-        Self { map }
+        let tool = Tool::default();
+        let dragging = false;
+        Self { map, tool, dragging }
     }
 }
 
@@ -153,6 +166,25 @@ impl eframe::App for RpgMapGui {
             });
         });
 
+        egui::SidePanel::left("edit_widgets").show(ctx, |ui| {
+            ui.label("Edit");
+
+            if ui.button("Room").clicked() {
+                // Set the tool type to room
+                self.tool = Tool::CellPainter(AreaType::Room);
+            }
+
+            if ui.button("Nothing").clicked() {
+                // Set the tool type to nothing
+                self.tool = Tool::CellPainter(AreaType::Nothing);
+            }
+
+            if ui.button("Entrance").clicked() {
+                // Set the tool type to Entrance
+                self.tool = Tool::CellPainter(AreaType::Entrance);
+            }
+        });
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let cell_size = 20.0;
 
@@ -160,6 +192,16 @@ impl eframe::App for RpgMapGui {
 
             egui::ScrollArea::both().show(ui, |ui| {
                 let scroll_offset = ui.cursor().left_top();
+
+                // Figure out if we're clicking in this region
+                ctx.input(|input| {
+                    if input.pointer.primary_down() {
+                        self.dragging = true;
+                    }
+                    if input.pointer.primary_released() {
+                        self.dragging = false;
+                    }
+                });
 
                 for x in 0..num_x {
                     for y in 0..num_y {
@@ -174,9 +216,8 @@ impl eframe::App for RpgMapGui {
                             egui::Sense::drag(), // "click_and_drag" has latency
                         );
 
-                        let map_cell = self.map.get_cell_ref(x, y);
-
-                        let color = match map_cell.area() {
+                        // TODO: Refactor this into an into() call.
+                        let color = match self.map.get_cell_ref(x,y).area() {
                             AreaType::Room => egui::Color32::LIGHT_GRAY,
                             AreaType::Entrance => egui::Color32::RED,
                             AreaType::Nothing => egui::Color32::DARK_GRAY,
@@ -190,6 +231,18 @@ impl eframe::App for RpgMapGui {
                             0.0,
                             egui::Stroke::new(1.0, egui::Color32::BLACK),
                         );
+
+                        // If the mouse main button is down then we may need to
+                        // set a cell.
+                        if self.dragging && cell.rect.contains(ctx.pointer_hover_pos().unwrap_or_default()) {
+                            if let Tool::CellPainter(ref area) = &self.tool {
+                                self.map.get_cell_mut(x, y).set_area(area.to_owned());
+                            }
+                        } else if ui.interact(cell.rect, egui::Id::new((x, y)), egui::Sense::click()).clicked() {
+                            if let Tool::CellPainter(ref area) = &self.tool {
+                                self.map.get_cell_mut(x, y).set_area(area.to_owned());
+                            }
+                        }
                     }
                 }
             });
