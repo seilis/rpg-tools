@@ -2,10 +2,11 @@
 use clap::{command, value_parser, Arg};
 use egui;
 
+use rpgtools::error::Result;
 use rpgtools::map::gridmap::AreaType;
-use rpgtools::map::{GridMap, Renderer};
+use rpgtools::map::{gridmap::Point, GridMap};
 
-fn main() {
+fn main() -> Result<()> {
     let cli = command!()
         .author("Aaron Seilis <aaron.seilis@seilis.ca>")
         .about("A simple map generator for role playing games")
@@ -92,12 +93,14 @@ fn main() {
     match style.as_str() {
         "halls" => {
             map.generate_dungeon(num_rooms, 5);
-            map.place_entrance_near((width / 2, height / 2))
+            let point: Point = (width / 2, height / 2).try_into().unwrap();
+            map.place_entrance_near(point)
                 .expect("width/height is outside of map");
         }
         "cave" => {
             map.generate_cave(4, 50);
-            map.place_entrance_near((width / 2, height / 2))
+            let point: Point = (width / 2, height / 2).try_into().unwrap();
+            map.place_entrance_near(point)
                 .expect("width/height is outside of map");
         }
         _ => unreachable!(),
@@ -108,7 +111,9 @@ fn main() {
         "RPG Map",
         options,
         Box::new(|_cc| Ok(Box::new(RpgMapGui::new(map)))),
-    );
+    )?;
+
+    Ok(())
 }
 
 enum Tool {
@@ -137,7 +142,11 @@ impl RpgMapGui {
     fn new(map: GridMap) -> Self {
         let tool = Tool::default();
         let dragging = false;
-        Self { map, tool, dragging }
+        Self {
+            map,
+            tool,
+            dragging,
+        }
     }
 }
 
@@ -154,13 +163,17 @@ impl eframe::App for RpgMapGui {
                     if ui.button("Dungeon").clicked() {
                         // Generate a dungeon!
                         self.map.generate_dungeon(10, 5);
-                        self.map.place_entrance_near((0, 0));
+                        self.map
+                            .place_entrance_near((0, 0))
+                            .expect("failed to place entrance");
                     }
 
                     if ui.button("Cave").clicked() {
                         // Generate a cave!
                         self.map.generate_cave(4, 50);
-                        self.map.place_entrance_near((0, 0));
+                        self.map
+                            .place_entrance_near((0, 0))
+                            .expect("failed to place entrance");
                     }
                 });
             });
@@ -208,6 +221,8 @@ impl eframe::App for RpgMapGui {
                         let cell_x = scroll_offset.x + x as f32 * cell_size;
                         let cell_y = scroll_offset.y + y as f32 * cell_size;
 
+                        let point: Point = (x, y).try_into().unwrap();
+
                         let cell = ui.allocate_rect(
                             egui::Rect::from_min_size(
                                 egui::pos2(cell_x, cell_y),
@@ -217,7 +232,7 @@ impl eframe::App for RpgMapGui {
                         );
 
                         // TODO: Refactor this into an into() call.
-                        let color = match self.map.get_cell_ref(x,y).area() {
+                        let color = match self.map.get_cell_ref(point).area() {
                             AreaType::Room => egui::Color32::LIGHT_GRAY,
                             AreaType::Entrance => egui::Color32::RED,
                             AreaType::Nothing => egui::Color32::DARK_GRAY,
@@ -234,13 +249,20 @@ impl eframe::App for RpgMapGui {
 
                         // If the mouse main button is down then we may need to
                         // set a cell.
-                        if self.dragging && cell.rect.contains(ctx.pointer_hover_pos().unwrap_or_default()) {
+                        if self.dragging
+                            && cell
+                                .rect
+                                .contains(ctx.pointer_hover_pos().unwrap_or_default())
+                        {
                             if let Tool::CellPainter(ref area) = &self.tool {
-                                self.map.get_cell_mut(x, y).set_area(area.to_owned());
+                                self.map.get_cell_mut(point).set_area(area.to_owned());
                             }
-                        } else if ui.interact(cell.rect, egui::Id::new((x, y)), egui::Sense::click()).clicked() {
+                        } else if ui
+                            .interact(cell.rect, egui::Id::new(point), egui::Sense::click())
+                            .clicked()
+                        {
                             if let Tool::CellPainter(ref area) = &self.tool {
-                                self.map.get_cell_mut(x, y).set_area(area.to_owned());
+                                self.map.get_cell_mut(point).set_area(area.to_owned());
                             }
                         }
                     }

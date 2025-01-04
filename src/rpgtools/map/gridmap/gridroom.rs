@@ -1,5 +1,8 @@
 use std::collections::HashSet;
 
+use super::point::Point;
+use crate::error::{Result, RpgError};
+
 /// A representation of a room made up of GridCells
 ///
 /// The GridRoom represents a set of cells that are all connected together. These
@@ -9,7 +12,7 @@ use std::collections::HashSet;
 /// Currently the GridRoom represents the cells by a set of indexes.
 #[derive(Debug, PartialEq)]
 pub struct GridRoom {
-    cells: HashSet<(usize, usize)>,
+    cells: HashSet<Point>,
     connected: bool,
 }
 
@@ -23,13 +26,13 @@ impl GridRoom {
     }
 
     /// Add an index to a cell that's part of the GridRoom
-    pub fn add_cell(&mut self, (x, y): &(usize, usize)) -> Result<bool, String> {
-        Ok(self.cells.insert((*x, *y)))
+    pub fn add_cell(&mut self, point: impl Into<Point>) -> Result<bool> {
+        Ok(self.cells.insert(point.into()))
     }
 
     /// Remove an index from the GridRoom
-    pub fn remove_cell(&mut self, (x, y): &(usize, usize)) -> Result<bool, String> {
-        Ok(self.cells.remove(&(*x, *y)))
+    pub fn remove_cell(&mut self, point: impl Into<Point>) -> Result<bool> {
+        Ok(self.cells.remove(&point.into()))
     }
 
     /// Test whether the GridRoom is empty (contains no indexes/cells)
@@ -37,28 +40,27 @@ impl GridRoom {
         self.cells.is_empty()
     }
 
-    pub fn nearest_cells(
-        &self,
-        other: &GridRoom,
-    ) -> Result<((usize, usize), (usize, usize)), String> {
+    pub fn nearest_cells(&self, other: &GridRoom) -> Result<(Point, Point)> {
         if self.is_empty() {
-            return Err("our room is empty; no nearest cells".to_string());
+            return Err(RpgError::Empty(
+                "our room is empty; no nearest cells".to_string(),
+            ));
         } else if other.is_empty() {
-            return Err("their room is empty; no nearest cells".to_string());
+            return Err(RpgError::Empty(
+                "their room is empty; no nearest cells".to_string(),
+            ));
         }
 
-        let mut best_distance = std::usize::MAX;
-        let mut our_closest = (0, 0);
-        let mut their_closest = (0, 0);
+        let mut best_distance = std::u64::MAX;
+        let mut our_closest = Point::default();
+        let mut their_closest = Point::default();
 
         // There must be a better way than n^2...
         for our_cell in self.iter_cells() {
             for their_cell in other.iter_cells() {
                 // Bunch of casting since we've used usize for the indices but
                 // the internal subtraction can be negative.
-                let this_distance = ((our_cell.0 as isize - their_cell.0 as isize).pow(2)
-                    + (our_cell.1 as isize - their_cell.1 as isize).pow(2))
-                    as usize;
+                let this_distance = our_cell.distance2(&their_cell);
 
                 if this_distance > best_distance {
                     continue;
@@ -73,7 +75,7 @@ impl GridRoom {
         Ok((our_closest, their_closest))
     }
 
-    pub fn iter_cells(&self) -> std::collections::hash_set::Iter<'_, (usize, usize)> {
+    pub fn iter_cells(&self) -> impl Iterator<Item = &Point> {
         self.cells.iter()
     }
 }
@@ -95,18 +97,21 @@ mod tests {
         let mut r2 = GridRoom::new();
 
         // r1 is a square 0,0 -> 1,1
-        r1.add_cell(&(0, 0)).unwrap();
-        r1.add_cell(&(0, 1)).unwrap();
-        r1.add_cell(&(1, 0)).unwrap();
-        r1.add_cell(&(1, 1)).unwrap();
+        r1.add_cell((0, 0)).unwrap();
+        r1.add_cell((0, 1)).unwrap();
+        r1.add_cell((1, 0)).unwrap();
+        r1.add_cell((1, 1)).unwrap();
 
         // r2 is a square on the diagonal @ 3,3 -> 4,4
-        r2.add_cell(&(3, 3)).unwrap();
-        r2.add_cell(&(3, 4)).unwrap();
-        r2.add_cell(&(4, 3)).unwrap();
-        r2.add_cell(&(4, 4)).unwrap();
+        r2.add_cell((3, 3)).unwrap();
+        r2.add_cell((3, 4)).unwrap();
+        r2.add_cell((4, 3)).unwrap();
+        r2.add_cell((4, 4)).unwrap();
 
         // Closest should be 1,1 and 3,3
-        assert_eq!(((1, 1), (3, 3)), r1.nearest_cells(&r2).unwrap())
+        assert_eq!(
+            (Point::new(1, 1), Point::new(3, 3)),
+            r1.nearest_cells(&r2).unwrap()
+        )
     }
 }
