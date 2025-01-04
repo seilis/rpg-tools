@@ -1,6 +1,6 @@
 //! Grid-based maps for dungeon layouts
 pub mod gridmap;
-pub use gridmap::{GridMap, GridCell, AreaType};
+pub use gridmap::{AreaType, GridCell, GridMap};
 
 mod renderer;
 pub use renderer::Renderer;
