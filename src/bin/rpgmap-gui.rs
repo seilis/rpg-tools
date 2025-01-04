@@ -2,8 +2,8 @@
 use clap::{command, value_parser, Arg};
 use egui;
 
-use rpgtools::map::{GridMap, Renderer};
 use rpgtools::map::gridmap::AreaType;
+use rpgtools::map::{GridMap, Renderer};
 
 fn main() {
     let cli = command!()
@@ -111,11 +111,12 @@ fn main() {
     }
 
     let options = eframe::NativeOptions::default();
-    eframe::run_native("RPG Map", options,
-        Box::new(|_cc| {Ok(Box::new(RpgMapGui::new(map)))})
+    eframe::run_native(
+        "RPG Map",
+        options,
+        Box::new(|_cc| Ok(Box::new(RpgMapGui::new(map)))),
     );
 }
-
 
 struct RpgMapGui {
     map: GridMap,
@@ -123,9 +124,7 @@ struct RpgMapGui {
 
 impl RpgMapGui {
     fn new(map: GridMap) -> Self {
-        Self {
-            map,
-        }
+        Self { map }
     }
 }
 
@@ -153,7 +152,6 @@ impl eframe::App for RpgMapGui {
                 });
             });
         });
-
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let cell_size = 20.0;
@@ -187,13 +185,14 @@ impl eframe::App for RpgMapGui {
                         ui.painter().rect_filled(cell.rect, 0.0, color);
 
                         // Draw the grid
-                        ui.painter().rect_stroke(cell.rect, 0.0, egui::Stroke::new(1.0, egui::Color32::BLACK));
+                        ui.painter().rect_stroke(
+                            cell.rect,
+                            0.0,
+                            egui::Stroke::new(1.0, egui::Color32::BLACK),
+                        );
                     }
                 }
             });
         });
     }
 }
-
-
-
