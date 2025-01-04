@@ -50,13 +50,13 @@ impl Renderer {
             for y in 0..ymax {
                 // Set the colour of this cell. All pixels within the cell
                 // will have this value.
-                let color = match self.map.get_cell_ref(x as usize, y as usize).area {
+                let color = match self.map.get_cell_ref((x, y)).area {
                     AreaType::Room => Rgba([200, 200, 200, 255]),
                     AreaType::Entrance => Rgba([255, 119, 0, 255]),
                     _ => Rgba([25, 25, 25, 255]),
                 };
 
-                if self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room {
+                if self.map.get_cell_ref((x, y)).area == AreaType::Room {
                     let mut sprite = self.get_floor_sprite().expect("failed to open file");
                     let mut rng = thread_rng();
                     let dist = rand::distributions::Uniform::new_inclusive(0, 3);
@@ -75,8 +75,8 @@ impl Renderer {
 
                 // Now check whether we need to draw the borders of the cell
                 if x < xmax - 1
-                    && self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room
-                    && self.map.get_cell_ref(x as usize + 1, y as usize).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
+                    && self.map.get_cell_ref((x + 1, y)).area == AreaType::Room
                 {
                     let x_pixel = (x + 1) * self.scale - 1;
                     for y_pixel in y * self.scale..(y + 1) * self.scale {
@@ -84,8 +84,8 @@ impl Renderer {
                     }
                 }
                 if x > 0
-                    && self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room
-                    && self.map.get_cell_ref(x as usize - 1, y as usize).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
+                    && self.map.get_cell_ref((x - 1, y)).area == AreaType::Room
                 {
                     // Explanation is the same as above but now it's the first
                     // pixel in our box
@@ -95,8 +95,8 @@ impl Renderer {
                     }
                 }
                 if y < ymax - 1
-                    && self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room
-                    && self.map.get_cell_ref(x as usize, y as usize + 1).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y + 1)).area == AreaType::Room
                 {
                     let y_pixel = (y + 1) * self.scale - 1;
                     for x_pixel in x * self.scale..(x + 1) * self.scale {
@@ -104,8 +104,8 @@ impl Renderer {
                     }
                 }
                 if y > 0
-                    && self.map.get_cell_ref(x as usize, y as usize).area == AreaType::Room
-                    && self.map.get_cell_ref(x as usize, y as usize - 1).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y - 1)).area == AreaType::Room
                 {
                     // Explanation is the same as above.
                     let y_pixel = y * self.scale;

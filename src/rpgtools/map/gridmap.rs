@@ -16,8 +16,13 @@ pub use gridcell::{AreaType, GridCell};
 mod gridroom;
 use gridroom::GridRoom;
 
+mod point;
+pub use point::Point;
+
 // Need RouteMethod from rpgmap::route
 use super::route::RouteMethod;
+
+use crate::error::{Result, RpgError};
 
 /// A map with grid coordinates
 ///
@@ -63,39 +68,44 @@ impl GridMap {
     }
 
     /// Get a reference to a GridCell at coordinate.
-    pub fn get_cell_ref(&self, x: usize, y: usize) -> &GridCell {
+    pub fn get_cell_ref(&self, point: impl Into<Point>) -> &GridCell {
+        let (x, y): (usize, usize) = point.into().try_into().unwrap();
         &self.cells[x][y]
     }
 
     /// Get a mutable reference to a GridCell at coordinate.
-    pub fn get_cell_mut(&mut self, x: usize, y: usize) -> &mut GridCell {
+    pub fn get_cell_mut(&mut self, point: impl Into<Point>) -> &mut GridCell {
+        let (x, y): (usize, usize) = point.into().try_into().unwrap();
         &mut self.cells[x][y]
     }
 
     /// Set the entrance at a particular location. The cell at this location
     /// will be marked as having the entrance area type. Typically this will
     /// be coloured differently on a map.
-    pub fn place_entrance(&mut self, (x, y): (usize, usize)) {
+    pub fn place_entrance(&mut self, point: impl Into<Point>) -> Result<()> {
+        let (x, y): (usize, usize) = point.into().try_into().unwrap();
         if x >= self.xmax || y >= self.ymax {
-            panic!("Tried to place an entrance outside the bounds of the map");
+            return Err(RpgError::OutOfBounds);
         }
 
         self.cells[x][y].area = AreaType::Entrance;
+        Ok(())
     }
 
     /// Similar to place entrance, however it starts with the coordinates and
     /// finds the nearest spot that is already a "room". This allows entrances
     /// to be placed in non-deterministic generators, such as caves.
-    pub fn place_entrance_near(&mut self, (x, y): (usize, usize)) -> Result<(), &'static str> {
-        if x >= self.xmax || y >= self.ymax {
-            return Err("asked for an entrance outside map boundaries");
+    pub fn place_entrance_near(&mut self, point: impl Into<Point>) -> Result<()> {
+        let point = point.into();
+        if !point.is_in_bounds(Point::new(0, 0), (self.xmax, self.ymax).try_into().unwrap()) {
+            return Err(RpgError::OutOfBounds);
         }
 
-        let (x, y) = self
-            .find_by((x, y), &|cell: &GridCell| -> bool { cell.is_room() })
+        let point = self
+            .find_by(point, &|cell: &GridCell| -> bool { cell.is_room() })
             .unwrap();
 
-        self.place_entrance((x, y));
+        self.place_entrance(point);
         Ok(())
     }
 
@@ -105,7 +115,10 @@ impl GridMap {
     /// resulting room. The X-axis location of the room is the two specified X coordinates and all
     /// of the cells in between them. The Y-axis location of the room is the two specified Y
     /// coordinates and all of the cells in between them.
-    pub fn place_room(&mut self, (x0, y0): (usize, usize), (x1, y1): (usize, usize)) {
+    pub fn place_room(&mut self, point0: impl Into<Point>, point1: impl Into<Point>) {
+        let (x0, y0): (usize, usize) = point0.into().try_into().unwrap();
+        let (x1, y1): (usize, usize) = point1.into().try_into().unwrap();
+
         // For lower bounds, note that 0 is implicit lower bound in usize
         let x_lower = cmp::min(x0, x1); // Calculate the lower bound of x
         let y_lower = cmp::min(y0, y1); // Calculate the lower bound of y
@@ -128,22 +141,29 @@ impl GridMap {
     ///  *   (w, h) -> Width/Height of the room. Note, they're isize because
     ///               you can specify the w/h to be left OR right of the origin
     ///               and up OR down, respectively.
-    pub fn place_room_dimensions(&mut self, (x, y): (usize, usize), (w, h): (isize, isize)) {
+    pub fn place_room_dimensions(&mut self, point: impl Into<Point>, (w, h): (isize, isize)) {
+        let (x, y): (usize, usize) = point.into().try_into().unwrap();
         let x_lower = if w >= 0 { x } else { x - w as usize };
         let y_lower = if h >= 0 { y } else { y - h as usize };
         let x_upper = if w >= 0 { x + w as usize } else { x };
         let y_upper = if h >= 0 { y + h as usize } else { y };
 
-        self.place_room((x_lower, y_lower), (x_upper, y_upper));
+        let lower: Point = (x_lower, y_lower).try_into().unwrap();
+        let upper: Point = (x_upper, y_upper).try_into().unwrap();
+
+        self.place_room(lower, upper);
     }
 
     /// Place a hallway between two points
     pub fn place_hallway(
         &mut self,
-        (x0, y0): (usize, usize),
-        (x1, y1): (usize, usize),
+        point0: impl Into<Point>,
+        point1: impl Into<Point>,
         route: RouteMethod,
     ) {
+        let (x0, y0) = point0.into().into();
+        let (x1, y1) = point1.into().into();
+
         let route_selected = match route {
             RouteMethod::HorizontalFirst => RouteMethod::HorizontalFirst,
             RouteMethod::VerticalFirst => RouteMethod::VerticalFirst,
@@ -170,7 +190,8 @@ impl GridMap {
     }
 
     /// Find the nearest connected cell to the cell specified
-    fn find_nearest_connected(&self, (x, y): (usize, usize)) -> Option<(usize, usize)> {
+    fn find_nearest_connected(&self, point: impl Into<Point>) -> Option<Point> {
+        let (x, y) = point.into().into();
         self.find_by((x, y), &|cell: &GridCell| -> bool { cell.is_room() })
     }
 
@@ -179,11 +200,12 @@ impl GridMap {
     /// condition is passed in in the form of a function that takes a gridcell
     /// and outputs a result containing a boolean stating whether the match has
     /// been made or not.
-    fn find_by<F>(&self, (x, y): (usize, usize), cond: &F) -> Option<(usize, usize)>
+    fn find_by<F>(&self, point: impl Into<Point>, cond: &F) -> Option<Point>
     where
         F: Fn(&GridCell) -> bool,
     {
-        let mut rooms = Vec::<(usize, usize)>::new();
+        let (x, y): (usize, usize) = point.into().try_into().unwrap();
+        let mut rooms: Vec<Point> = vec![];
         let mut found = false;
         let mut radius: usize = 0;
 
@@ -204,23 +226,23 @@ impl GridMap {
             // Scan horizontal neighbours
             for i in xmin..xmax + 1 {
                 if cond(&self.cells[i][ymin]) {
-                    rooms.push((i, ymin));
+                    rooms.push((i, ymin).try_into().unwrap());
                     found = true;
                 }
                 if cond(&self.cells[i][ymax]) {
-                    rooms.push((i, ymax));
+                    rooms.push((i, ymax).try_into().unwrap());
                     found = true;
                 }
             }
 
-            // Scan virtical neighbours
+            // Scan vertical neighbours
             for j in ymin..ymax + 1 {
                 if cond(&self.cells[xmin][j]) {
-                    rooms.push((xmin, j));
+                    rooms.push((xmin, j).try_into().unwrap());
                     found = true;
                 }
                 if cond(&self.cells[xmax][j]) {
-                    rooms.push((xmax, j));
+                    rooms.push((xmax, j).try_into().unwrap());
                     found = true;
                 }
             }
@@ -281,17 +303,19 @@ impl GridMap {
         // Generate the origin (location) of the room
         let x0 = rng.gen_range(1..self.xmax);
         let y0 = rng.gen_range(1..self.ymax);
+        let point0: Point = (x0, y0).try_into().unwrap();
 
         // See if we need to connect the room to an existing one.
         if connect {
             // Find the nearest connected location and return
             // the coordinates.
-            let (x, y) = self
-                .find_nearest_connected((x0, y0))
+            let p1 = self
+                .find_nearest_connected(point0)
                 .expect("no existing rooms to connect");
             // Drow the hallway; some of this will be overwritten by
             // the room placement below.
-            self.place_hallway((x0, y0), (x, y), RouteMethod::Manhattan);
+            let p0: Point = (x0, y0).try_into().unwrap();
+            self.place_hallway(p0, p1, RouteMethod::Manhattan);
         }
 
         // Set x/y min/max while checking for overflows on either
@@ -301,7 +325,9 @@ impl GridMap {
         let xmax = cmp::min(self.xmax - 1, x0 + width / 2);
         let ymax = cmp::min(self.ymax - 1, y0 + width / 2);
 
-        self.place_room((xmin, ymin), (xmax, ymax));
+        let min: Point = (xmin, ymin).try_into().unwrap();
+        let max: Point = (xmax, ymax).try_into().unwrap();
+        self.place_room(min, max);
     }
 
     pub fn generate_dungeon(&mut self, num_rooms: usize, room_size: usize) {
@@ -312,7 +338,7 @@ impl GridMap {
         }
 
         let mut rooms = self.partition_rooms();
-        let mut distance: isize = 36;
+        let mut distance = 36;
 
         while rooms.len() > 1 {
             for rooms_combo in rooms.iter().combinations(2) {
@@ -327,10 +353,7 @@ impl GridMap {
                     .nearest_cells(room1)
                     .expect("finding nearest cells failed");
 
-                if (cell0.0 as isize - cell1.0 as isize).pow(2)
-                    + (cell0.1 as isize - cell1.1 as isize).pow(2)
-                    < distance
-                {
+                if cell0.distance2(&cell1) < distance {
                     self.place_hallway(cell0, cell1, RouteMethod::Manhattan);
                 }
             }
@@ -389,15 +412,19 @@ impl GridMap {
         let mut size;
         for i in 0..self.xmax {
             for j in 0..self.ymax {
-                size = self.get_room_size(i, j);
+                let point: Point = (i, j).try_into().unwrap();
+                size = self.get_room_size(point);
                 if size < 15 {
-                    self.clear_room(i, j);
+                    self.clear_room(point);
                 }
             }
         }
     }
 
-    fn get_room_size(&self, i: usize, j: usize) -> u64 {
+    /// Get the size of the room (in number of cells) at a point.
+    fn get_room_size(&self, point: impl Into<Point>) -> usize {
+        let (i, j): (usize, usize) = point.into().try_into().unwrap();
+
         // Output value
         let mut size = 0;
 
@@ -435,7 +462,8 @@ impl GridMap {
         size
     }
 
-    fn clear_room(&mut self, x: usize, y: usize) {
+    fn clear_room(&mut self, point: impl Into<Point>) {
+        let (x, y): (usize, usize) = point.into().try_into().unwrap();
         if self.cells[x][y].area == AreaType::Nothing {
             return;
         }
@@ -482,10 +510,7 @@ impl GridMap {
                 .nearest_cells(cave2)
                 .expect("finding nearest cells failed");
 
-            if (cell1.0 as isize - cell2.0 as isize).pow(2)
-                + (cell1.1 as isize - cell2.1 as isize).pow(2)
-                < 36
-            {
+            if cell1.distance2(&cell2) < 36 {
                 self.place_hallway(cell1, cell2, RouteMethod::Manhattan);
             }
         }
@@ -573,7 +598,8 @@ impl GridMap {
                 // it has the correct type and we haven't processed it yet. Add
                 // it too our room and then add the immediate nearest neighbours
                 // to our processing queue.
-                room.add_cell(&index).expect("failed to add cell");
+                let index: Point = index.try_into().unwrap();
+                room.add_cell(index).expect("failed to add cell");
                 proc_queue.push_back((x + 1, y));
                 proc_queue.push_back((x.saturating_sub(1), y));
                 proc_queue.push_back((x, y + 1));

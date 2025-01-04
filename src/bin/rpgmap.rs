@@ -1,9 +1,10 @@
 //! Program for making simple RPG maps. This is the Rust language implementation.
 use clap::{command, value_parser, Arg};
 
-use rpgtools::map::{GridMap, Renderer};
+use rpgtools::error::Result;
+use rpgtools::map::{gridmap::Point, GridMap, Renderer};
 
-fn main() {
+fn main() -> Result<()> {
     let cli = command!()
         .author("Aaron Seilis <aaron.seilis@seilis.ca>")
         .about("A simple map generator for role playing games")
@@ -97,13 +98,13 @@ fn main() {
     match style.as_str() {
         "halls" => {
             map.generate_dungeon(num_rooms, 5);
-            map.place_entrance_near((width / 2, height / 2))
-                .expect("width/height is outside of map");
+            let point: Point = (width / 2, height / 2).try_into().unwrap();
+            map.place_entrance_near(point)?;
         }
         "cave" => {
             map.generate_cave(4, 50);
-            map.place_entrance_near((width / 2, height / 2))
-                .expect("width/height is outside of map");
+            let point: Point = (width / 2, height / 2).try_into().unwrap();
+            map.place_entrance_near(point)?;
         }
         _ => unreachable!(),
     }
@@ -115,4 +116,6 @@ fn main() {
         Ok(_) => println!("Map generated: {}", filename),
         Err(e) => println!("Error: {}", e),
     }
+
+    Ok(())
 }
