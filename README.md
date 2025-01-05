@@ -9,7 +9,16 @@ Currently `rpgmap` is the only available tool but more are planned:
 * World-map generator
 * ... (ideas welcome)
 
-## RPG Map
+## RPG Map (GUI!)
+As of v1.4 we now have a brand-new GUI! It's still a preview-level of quality. For example, the save/load feature hasn't been implemented yet. But it's coming!
+
+Launch with:
+```
+rpgmap-gui
+```
+![GUI Screenshot](doc/images/GUI-screenshot.png)
+
+## RPG Map (CLI)
 `rpgmap` is a grid-based map generator. This is the primary tool available
 right now.
 

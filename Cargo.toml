@@ -1,6 +1,6 @@
 [package]
 name        = "rpgtools"
-version     = "1.4.0-dev"
+version     = "1.4.0"
 authors     = ["Aaron Seilis <aaron.seilis@seilis.ca>"]
 edition     = "2021"
 description = "Collection of utilities to help run tabletop role-playing games"
@@ -31,4 +31,5 @@ name = "rpgtools"
 path = "src/rpgtools/lib.rs"
 
 [profile.release]
-debug = true
+# For profiling
+#debug = true

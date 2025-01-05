@@ -1,5 +1,13 @@
 # Change Log
 
+## v1.4.0
+
+### Added
+
+- A brand-new egui-based GUI, called `rpgmap-gui`. This brings interactivity to
+  the rpgtools experience, but it's still in the early stages so functionality
+  is limited.
+
 ## v1.3.0
 
 ### Updated
