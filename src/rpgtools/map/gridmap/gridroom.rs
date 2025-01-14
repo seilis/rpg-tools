@@ -51,7 +51,7 @@ impl GridRoom {
             ));
         }
 
-        let mut best_distance = std::u64::MAX;
+        let mut best_distance = u64::MAX;
         let mut our_closest = Point::default();
         let mut their_closest = Point::default();
 
