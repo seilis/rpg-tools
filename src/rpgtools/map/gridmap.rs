@@ -2,6 +2,8 @@
 use std::cmp;
 use std::collections::HashSet;
 use std::collections::VecDeque;
+use std::ops::Index;
+use std::ops::IndexMut;
 
 // Extern crates
 use rand::prelude::*;
@@ -105,7 +107,7 @@ impl GridMap {
             .find_by(point, &|cell: &GridCell| -> bool { cell.is_room() })
             .unwrap();
 
-        self.place_entrance(point);
+        self.place_entrance(point)?;
         Ok(())
     }
 
@@ -625,6 +627,16 @@ impl GridMap {
         }
     }
 }
+
+impl Index<Point> for GridMap {
+    type Output = GridCell;
+
+    fn index(&self, index: Point) -> &Self::Output {
+        let (x, y): (usize, usize) = index.try_into().unwrap();
+        &self.cells[x][y]
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
