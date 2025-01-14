@@ -9,8 +9,8 @@ use std::ops::{Add, Neg, Sub};
 /// Note that this type is just an index and therefore implements both Clone and Copy.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Point {
-    x: i64,
-    y: i64,
+    pub x: i64,
+    pub y: i64,
 }
 
 impl Point {
