@@ -1,6 +1,5 @@
 //! Program for making simple RPG maps. This is the Rust language implementation.
 use clap::{command, value_parser, Arg};
-use egui;
 
 use rpgtools::error::Result;
 use rpgtools::map::gridmap::AreaType;
@@ -198,6 +197,8 @@ impl eframe::App for RpgMapGui {
             }
         });
 
+        let mut cursor_pos: Option<(usize, usize)> = None;
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let cell_size = 20.0;
 
@@ -247,6 +248,11 @@ impl eframe::App for RpgMapGui {
                             egui::Stroke::new(1.0, egui::Color32::BLACK),
                         );
 
+                        // Test if we're hovering over the cell
+                        if cell.rect.contains(ctx.pointer_hover_pos().unwrap_or_default()) {
+                            cursor_pos = Some((x, y));
+                        }
+
                         // If the mouse main button is down then we may need to
                         // set a cell.
                         if self.dragging
@@ -266,6 +272,16 @@ impl eframe::App for RpgMapGui {
                             }
                         }
                     }
+                }
+            });
+        });
+
+        egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if let Some((x, y)) = cursor_pos {
+                    ui.label(format!("Cell: ({}, {})", x, y));
+                } else {
+                    ui.label("Cell: (N/A)");
                 }
             });
         });
