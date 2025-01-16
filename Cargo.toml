@@ -11,16 +11,16 @@ categories  = ["games"]
 license     = "GPL-3.0"
 
 [dependencies]
-clap      = {version = "^4.4.16", features = ["cargo"]}
-eframe    = "0.29.1"
-egui      = "0.29.1"
-image     = "^0.24.7"
-itertools = "^0.12.0"
+clap      = {version = "^4.5.26", features = ["cargo"]}
+eframe    = "^0.30.0"
+egui      = "^0.30.0"
+image     = "^0.25.5"
+itertools = "^0.14.0"
 rand      = "^0.8.5"
-resvg     = "^0.37.0"
+resvg     = "^0.44.0"
 thiserror = "^2.0.9"
-tiny-skia = "^0.11.3"
-usvg      = "^0.37.0"
+tiny-skia = "^0.11.4"
+usvg      = "^0.44.0"
 
 [[bin]]
 name = "rpgmap"
