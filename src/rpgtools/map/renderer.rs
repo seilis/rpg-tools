@@ -4,7 +4,6 @@ use std::io::{Error, ErrorKind};
 use image::{imageops::rotate90, Rgba, RgbaImage};
 
 use rand::prelude::*;
-use usvg::TreeParsing;
 
 use super::gridmap::AreaType;
 use super::GridMap;
@@ -150,8 +149,7 @@ impl Renderer {
 
             let rtree = usvg::Tree::from_str(sprite, &options).unwrap();
             let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
-            let render_tree = resvg::Tree::from_usvg(&rtree);
-            render_tree.render(tiny_skia::Transform::identity(), &mut pixmap.as_mut());
+            resvg::render(&rtree, tiny_skia::Transform::identity(), &mut pixmap.as_mut());
 
             let image = RgbaImage::from_vec(size as u32, size as u32, pixmap.take()).unwrap();
             self.assets.push(image);
