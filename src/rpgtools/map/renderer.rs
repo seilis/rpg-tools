@@ -5,7 +5,7 @@ use image::{imageops::rotate90, Rgba, RgbaImage};
 
 use rand::prelude::*;
 
-use super::gridmap::AreaType;
+use super::Area;
 use super::GridMap;
 
 // Assets
@@ -50,12 +50,12 @@ impl Renderer {
                 // Set the colour of this cell. All pixels within the cell
                 // will have this value.
                 let color = match self.map.get_cell_ref((x, y)).area {
-                    AreaType::Room => Rgba([200, 200, 200, 255]),
-                    AreaType::Entrance => Rgba([255, 119, 0, 255]),
+                    Area::Room => Rgba([200, 200, 200, 255]),
+                    Area::Entrance => Rgba([255, 119, 0, 255]),
                     _ => Rgba([25, 25, 25, 255]),
                 };
 
-                if self.map.get_cell_ref((x, y)).area == AreaType::Room {
+                if self.map.get_cell_ref((x, y)).area == Area::Room {
                     let mut sprite = self.get_floor_sprite().expect("failed to open file");
                     let mut rng = thread_rng();
                     let dist = rand::distributions::Uniform::new_inclusive(0, 3);
@@ -74,8 +74,8 @@ impl Renderer {
 
                 // Now check whether we need to draw the borders of the cell
                 if x < xmax - 1
-                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
-                    && self.map.get_cell_ref((x + 1, y)).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == Area::Room
+                    && self.map.get_cell_ref((x + 1, y)).area == Area::Room
                 {
                     let x_pixel = (x + 1) * self.scale - 1;
                     for y_pixel in y * self.scale..(y + 1) * self.scale {
@@ -83,8 +83,8 @@ impl Renderer {
                     }
                 }
                 if x > 0
-                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
-                    && self.map.get_cell_ref((x - 1, y)).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == Area::Room
+                    && self.map.get_cell_ref((x - 1, y)).area == Area::Room
                 {
                     // Explanation is the same as above but now it's the first
                     // pixel in our box
@@ -94,8 +94,8 @@ impl Renderer {
                     }
                 }
                 if y < ymax - 1
-                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
-                    && self.map.get_cell_ref((x, y + 1)).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == Area::Room
+                    && self.map.get_cell_ref((x, y + 1)).area == Area::Room
                 {
                     let y_pixel = (y + 1) * self.scale - 1;
                     for x_pixel in x * self.scale..(x + 1) * self.scale {
@@ -103,8 +103,8 @@ impl Renderer {
                     }
                 }
                 if y > 0
-                    && self.map.get_cell_ref((x, y)).area == AreaType::Room
-                    && self.map.get_cell_ref((x, y - 1)).area == AreaType::Room
+                    && self.map.get_cell_ref((x, y)).area == Area::Room
+                    && self.map.get_cell_ref((x, y - 1)).area == Area::Room
                 {
                     // Explanation is the same as above.
                     let y_pixel = y * self.scale;
@@ -149,7 +149,11 @@ impl Renderer {
 
             let rtree = usvg::Tree::from_str(sprite, &options).unwrap();
             let mut pixmap = tiny_skia::Pixmap::new(size as u32, size as u32).unwrap();
-            resvg::render(&rtree, tiny_skia::Transform::identity(), &mut pixmap.as_mut());
+            resvg::render(
+                &rtree,
+                tiny_skia::Transform::identity(),
+                &mut pixmap.as_mut(),
+            );
 
             let image = RgbaImage::from_vec(size as u32, size as u32, pixmap.take()).unwrap();
             self.assets.push(image);

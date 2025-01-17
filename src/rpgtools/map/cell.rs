@@ -1,14 +1,7 @@
-#[derive(Clone, Debug, PartialEq)]
-pub enum AreaType {
-    Nothing,
-    Entrance,
-    Room,
-    //    Stairs,
-    //    Tested,
-}
+use super::Area;
 
 #[derive(Clone, Debug)]
-pub enum WallType {
+pub enum Wall {
     Nothing,
     //    Wall,
     //    Door,
@@ -16,29 +9,29 @@ pub enum WallType {
 }
 
 #[derive(Clone, Debug)]
-pub enum PointType {
+pub enum Point {
     Nothing,
     //    Pillar,
 }
 
 /// Representation of a GridCell, which is a single unit in a grid.
 #[derive(Clone, Debug)]
-pub struct GridCell {
+pub struct Cell {
     /// The type of area contained within this sell
-    pub area: AreaType,
-    vert_wall: WallType,
-    horiz_wall: WallType,
-    point: PointType,
+    pub area: Area,
+    vert_wall: Wall,
+    horiz_wall: Wall,
+    point: Point,
 }
 
-impl GridCell {
-    /// Construct a new GridCell
-    pub fn new() -> GridCell {
-        GridCell {
-            area: AreaType::Nothing,
-            vert_wall: WallType::Nothing,
-            horiz_wall: WallType::Nothing,
-            point: PointType::Nothing,
+impl Cell {
+    /// Construct a new Cell
+    pub fn new() -> Cell {
+        Cell {
+            area: Area::Nothing,
+            vert_wall: Wall::Nothing,
+            horiz_wall: Wall::Nothing,
+            point: Point::Nothing,
         }
     }
 
@@ -47,11 +40,11 @@ impl GridCell {
     pub fn is_empty(&self) -> bool {
         matches!(
             *self,
-            GridCell {
-                area: AreaType::Nothing,
-                vert_wall: WallType::Nothing,
-                horiz_wall: WallType::Nothing,
-                point: PointType::Nothing,
+            Cell {
+                area: Area::Nothing,
+                vert_wall: Wall::Nothing,
+                horiz_wall: Wall::Nothing,
+                point: Point::Nothing,
                 ..
             }
         )
@@ -69,25 +62,25 @@ impl GridCell {
     pub fn is_room(&self) -> bool {
         !matches!(
             *self,
-            GridCell {
-                area: AreaType::Nothing,
+            Cell {
+                area: Area::Nothing,
                 ..
             }
         )
     }
 
     /// Get the type of area that this cell represents
-    pub fn area(&self) -> &AreaType {
+    pub fn area(&self) -> &Area {
         &self.area
     }
 
     /// Set the type of area that this cell represents
-    pub fn set_area(&mut self, area: AreaType) {
+    pub fn set_area(&mut self, area: Area) {
         self.area = area;
     }
 }
 
-impl Default for GridCell {
+impl Default for Cell {
     fn default() -> Self {
         Self::new()
     }
@@ -99,31 +92,31 @@ mod tests {
 
     #[test]
     fn new() {
-        let cell = GridCell::new();
-        assert_eq!(AreaType::Nothing, cell.area);
+        let cell = Cell::new();
+        assert_eq!(Area::Nothing, cell.area);
     }
 
     #[test]
     fn is_empty() {
-        let mut cell = GridCell::new();
+        let mut cell = Cell::new();
         // Do checks
-        cell.area = AreaType::Nothing;
+        cell.area = Area::Nothing;
         assert_eq!(true, cell.is_empty());
-        cell.area = AreaType::Entrance;
+        cell.area = Area::Entrance;
         assert_eq!(false, cell.is_empty());
-        cell.area = AreaType::Room;
+        cell.area = Area::Room;
         assert_eq!(false, cell.is_empty());
     }
 
     #[test]
     fn is_room() {
-        let mut cell = GridCell::new();
+        let mut cell = Cell::new();
         // Do checks
-        cell.area = AreaType::Nothing;
+        cell.area = Area::Nothing;
         assert_eq!(false, cell.is_room());
-        cell.area = AreaType::Entrance;
+        cell.area = Area::Entrance;
         assert_eq!(true, cell.is_room());
-        cell.area = AreaType::Room;
+        cell.area = Area::Room;
         assert_eq!(true, cell.is_room());
     }
 }

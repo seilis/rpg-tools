@@ -3,7 +3,6 @@ use std::cmp;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::ops::Index;
-use std::ops::IndexMut;
 
 // Extern crates
 use rand::prelude::*;
@@ -12,14 +11,10 @@ use rand::{thread_rng, Rng};
 use itertools::Itertools;
 
 // Local modules
-mod gridcell;
-pub use gridcell::{AreaType, GridCell};
-
-mod gridroom;
-use gridroom::GridRoom;
-
-mod point;
-pub use point::Point;
+use super::cell::Cell;
+use super::room::Room;
+pub use super::point::Point;
+use super::area::Area;
 
 // Need RouteMethod from rpgmap::route
 use super::route::RouteMethod;
@@ -38,7 +33,7 @@ use crate::error::{Result, RpgError};
 pub struct GridMap {
     xmax: usize,
     ymax: usize,
-    cells: Vec<Vec<GridCell>>,
+    cells: Vec<Vec<Cell>>,
 }
 
 impl GridMap {
@@ -53,7 +48,7 @@ impl GridMap {
         GridMap {
             xmax,
             ymax,
-            cells: vec![vec![GridCell::new(); ymax]; xmax],
+            cells: vec![vec![Cell::new(); ymax]; xmax],
         }
     }
 
@@ -70,13 +65,13 @@ impl GridMap {
     }
 
     /// Get a reference to a GridCell at coordinate.
-    pub fn get_cell_ref(&self, point: impl Into<Point>) -> &GridCell {
+    pub fn get_cell_ref(&self, point: impl Into<Point>) -> &Cell {
         let (x, y): (usize, usize) = point.into().try_into().unwrap();
         &self.cells[x][y]
     }
 
     /// Get a mutable reference to a GridCell at coordinate.
-    pub fn get_cell_mut(&mut self, point: impl Into<Point>) -> &mut GridCell {
+    pub fn get_cell_mut(&mut self, point: impl Into<Point>) -> &mut Cell {
         let (x, y): (usize, usize) = point.into().try_into().unwrap();
         &mut self.cells[x][y]
     }
@@ -90,7 +85,7 @@ impl GridMap {
             return Err(RpgError::OutOfBounds);
         }
 
-        self.cells[x][y].area = AreaType::Entrance;
+        self.cells[x][y].area = Area::Entrance;
         Ok(())
     }
 
@@ -104,7 +99,7 @@ impl GridMap {
         }
 
         let point = self
-            .find_by(point, &|cell: &GridCell| -> bool { cell.is_room() })
+            .find_by(point, &|cell: &Cell| -> bool { cell.is_room() })
             .unwrap();
 
         self.place_entrance(point)?;
@@ -129,8 +124,8 @@ impl GridMap {
 
         for i in x_lower..x_upper + 1 {
             for j in y_lower..y_upper + 1 {
-                if self.cells[i][j].area != AreaType::Entrance {
-                    self.cells[i][j].area = AreaType::Room;
+                if self.cells[i][j].area != Area::Entrance {
+                    self.cells[i][j].area = Area::Room;
                 }
             }
         }
@@ -194,7 +189,7 @@ impl GridMap {
     /// Find the nearest connected cell to the cell specified
     fn find_nearest_connected(&self, point: impl Into<Point>) -> Option<Point> {
         let (x, y) = point.into().into();
-        self.find_by((x, y), &|cell: &GridCell| -> bool { cell.is_room() })
+        self.find_by((x, y), &|cell: &Cell| -> bool { cell.is_room() })
     }
 
     /// Find a cell with an arbitrary condition. This function takes a starting
@@ -204,7 +199,7 @@ impl GridMap {
     /// been made or not.
     fn find_by<F>(&self, point: impl Into<Point>, cond: &F) -> Option<Point>
     where
-        F: Fn(&GridCell) -> bool,
+        F: Fn(&Cell) -> bool,
     {
         let (x, y): (usize, usize) = point.into().try_into().unwrap();
         let mut rooms: Vec<Point> = vec![];
@@ -267,9 +262,9 @@ impl GridMap {
             for j in 0..self.ymax {
                 let val = rng.gen_range(1..100);
                 if val > limit {
-                    self.cells[i][j].area = AreaType::Room;
+                    self.cells[i][j].area = Area::Room;
                 } else {
-                    self.cells[i][j].area = AreaType::Nothing;
+                    self.cells[i][j].area = Area::Nothing;
                 }
             }
         }
@@ -287,7 +282,7 @@ impl GridMap {
                     && self.cells[i + 1][j].is_empty()
                     && self.cells[i][j + 1].is_empty();
                 if alone {
-                    self.cells[i][j].area = AreaType::Nothing;
+                    self.cells[i][j].area = Area::Nothing;
                 }
             }
         }
@@ -380,7 +375,7 @@ impl GridMap {
             // 3x3 grid
             for x in i - 1..i + 2 {
                 for y in j - 1..j + 2 {
-                    if self.cells[x][y].area == AreaType::Room {
+                    if self.cells[x][y].area == Area::Room {
                         neighbours += 1;
                     }
                 }
@@ -399,9 +394,9 @@ impl GridMap {
         for i in 0..self.xmax {
             for j in 0..self.ymax {
                 if self.cave_anneal_cell(i, j) {
-                    tmp_map[i][j].area = AreaType::Room;
+                    tmp_map[i][j].area = Area::Room;
                 } else {
-                    tmp_map[i][j].area = AreaType::Nothing;
+                    tmp_map[i][j].area = Area::Nothing;
                 }
             }
         }
@@ -444,7 +439,7 @@ impl GridMap {
 
             // If we have visited this cell before or it is not a "room" then
             // we should stop processing and move on to the next
-            if visited[x * self.xmax + y] || self.cells[x][y].area != AreaType::Room {
+            if visited[x * self.xmax + y] || self.cells[x][y].area != Area::Room {
                 continue;
             }
 
@@ -466,7 +461,7 @@ impl GridMap {
 
     fn clear_room(&mut self, point: impl Into<Point>) {
         let (x, y): (usize, usize) = point.into().try_into().unwrap();
-        if self.cells[x][y].area == AreaType::Nothing {
+        if self.cells[x][y].area == Area::Nothing {
             return;
         }
 
@@ -476,11 +471,11 @@ impl GridMap {
         while !proc_queue.is_empty() {
             let (i, j) = proc_queue.pop_front().unwrap();
 
-            if self.cells[i][j].area == AreaType::Nothing {
+            if self.cells[i][j].area == Area::Nothing {
                 continue;
             }
 
-            self.cells[i][j].area = AreaType::Nothing;
+            self.cells[i][j].area = Area::Nothing;
             proc_queue.push_back((i + 1, j));
             proc_queue.push_back((i - 1, j));
             proc_queue.push_back((i, j + 1));
@@ -518,7 +513,7 @@ impl GridMap {
         }
     }
 
-    fn partition_rooms(&self) -> Vec<GridRoom> {
+    fn partition_rooms(&self) -> Vec<Room> {
         self.partition_spaces(false)
     }
 
@@ -527,7 +522,7 @@ impl GridMap {
     /// The 'rooms' are just collections of cells of the same type, so there is
     /// at least one room that contains the walls/Nothing cells. These rooms
     /// can then be used for path processing or connectivity testing.
-    fn partition_spaces(&self, include_nothing: bool) -> Vec<GridRoom> {
+    fn partition_spaces(&self, include_nothing: bool) -> Vec<Room> {
         let mut out = Vec::new();
 
         // Make an set of the unvisited cells. Use this for finding new
@@ -551,7 +546,7 @@ impl GridMap {
 
             // This is going to be a 'room' (which includes contiguous AreaType::Nothing
             // spaces). Make a new one here that we're going to build up.
-            let mut room = GridRoom::new();
+            let mut room = Room::new();
 
             // Need a queue for the flood algorithm. We're going to keep adding
             // to this queue until we run out of spaces to add to it.
@@ -609,7 +604,7 @@ impl GridMap {
             }
             // The room is now complete; add it to our output vector and forget
             // about this particular room.
-            if *this_area_type != AreaType::Nothing || include_nothing {
+            if *this_area_type != Area::Nothing || include_nothing {
                 out.push(room);
             }
         }
@@ -622,21 +617,20 @@ impl GridMap {
     fn clear(&mut self) {
         for x in 0..self.xmax {
             for y in 0..self.ymax {
-                self.cells[x][y].area = AreaType::Nothing;
+                self.cells[x][y].area = Area::Nothing;
             }
         }
     }
 }
 
 impl Index<Point> for GridMap {
-    type Output = GridCell;
+    type Output = Cell;
 
     fn index(&self, index: Point) -> &Self::Output {
         let (x, y): (usize, usize) = index.try_into().unwrap();
         &self.cells[x][y]
     }
 }
-
 
 #[cfg(test)]
 mod tests {

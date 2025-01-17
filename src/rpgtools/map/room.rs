@@ -11,15 +11,15 @@ use crate::error::{Result, RpgError};
 ///
 /// Currently the GridRoom represents the cells by a set of indexes.
 #[derive(Debug, PartialEq)]
-pub struct GridRoom {
+pub struct Room {
     cells: HashSet<Point>,
     connected: bool,
 }
 
-impl GridRoom {
+impl Room {
     /// Make a new GridRoom
-    pub fn new() -> GridRoom {
-        GridRoom {
+    pub fn new() -> Room {
+        Room {
             cells: HashSet::new(),
             connected: false,
         }
@@ -40,7 +40,7 @@ impl GridRoom {
         self.cells.is_empty()
     }
 
-    pub fn nearest_cells(&self, other: &GridRoom) -> Result<(Point, Point)> {
+    pub fn nearest_cells(&self, other: &Room) -> Result<(Point, Point)> {
         if self.is_empty() {
             return Err(RpgError::Empty(
                 "our room is empty; no nearest cells".to_string(),
@@ -86,15 +86,15 @@ mod tests {
 
     #[test]
     fn new() {
-        let room = GridRoom::new();
+        let room = Room::new();
 
         assert_eq!(0, room.iter_cells().count());
     }
 
     #[test]
     fn nearest_square() {
-        let mut r1 = GridRoom::new();
-        let mut r2 = GridRoom::new();
+        let mut r1 = Room::new();
+        let mut r2 = Room::new();
 
         // r1 is a square 0,0 -> 1,1
         r1.add_cell((0, 0)).unwrap();

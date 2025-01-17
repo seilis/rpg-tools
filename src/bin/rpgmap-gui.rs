@@ -2,8 +2,8 @@
 use clap::{command, value_parser, Arg};
 
 use rpgtools::error::Result;
-use rpgtools::map::gridmap::AreaType;
-use rpgtools::map::{gridmap::Point, GridMap};
+use rpgtools::map::Area;
+use rpgtools::map::{Point, GridMap};
 
 fn main() -> Result<()> {
     let cli = command!()
@@ -116,7 +116,7 @@ fn main() -> Result<()> {
 }
 
 enum Tool {
-    CellPainter(AreaType),
+    CellPainter(Area),
     // Move
     // CellSelection
     // ???
@@ -124,8 +124,37 @@ enum Tool {
 
 impl Default for Tool {
     fn default() -> Self {
-        Self::CellPainter(AreaType::Room)
+        Self::CellPainter(Area::Room)
     }
+}
+
+type Color = egui::Color32;
+
+#[derive(Clone, Copy)]
+struct Pallet {
+    room: Color,
+    entrance: Color,
+    nothing: Color,
+    grid: Color,
+    grid_highlight: Color,
+}
+
+impl Default for Pallet {
+    fn default() -> Self {
+        Self {
+            room: Color::LIGHT_GRAY,
+            entrance: Color::RED,
+            nothing: Color::DARK_GRAY,
+            grid: Color::BLACK,
+            grid_highlight: Color::YELLOW,
+        }
+    }
+}
+
+enum Dialog {
+    Save,
+    Load,
+    Quit,
 }
 
 struct RpgMapGui {
@@ -135,27 +164,45 @@ struct RpgMapGui {
     tool: Tool,
     // Mouse state
     dragging: bool,
+    // Colours pallet
+    colors: Pallet,
+    // Open dialog boxes
+    dialog: Option<Dialog>,
 }
 
 impl RpgMapGui {
     fn new(map: GridMap) -> Self {
         let tool = Tool::default();
         let dragging = false;
+        let colors = Pallet::default();
+
         Self {
             map,
             tool,
             dragging,
+            colors,
+            dialog: None,
         }
     }
 }
 
 impl eframe::App for RpgMapGui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Save the current position of the cursor for further checks
+        let mut cursor_pos: Option<(usize, usize)> = None;
+
         egui::TopBottomPanel::top("menu").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Save").clicked() {
                         // TODO: SAVE!
+                    }
+                    if ui.button("Load").clicked() {
+                        // TODO: LOAD
+                    }
+                    if ui.button("Quit").clicked() {
+                        // Show a dialog box for "are you sure?"
+                        self.dialog = Some(Dialog::Quit);
                     }
                 });
                 ui.menu_button("Generate", |ui| {
@@ -178,26 +225,40 @@ impl eframe::App for RpgMapGui {
             });
         });
 
+        match self.dialog {
+            Some(Dialog::Quit) => {
+                let _modal = egui::Modal::new("Confirm Quit".into()).show(ctx, |ui| {
+                    ui.label("Are you sure you want to quit?");
+                    if ui.button("Yes").clicked() {
+                        std::process::exit(0);
+                    }
+                    if ui.button("No").clicked() {
+                        self.dialog = None;
+                    }
+                });
+            }
+            _ => {}
+        }
+
         egui::SidePanel::left("edit_widgets").show(ctx, |ui| {
             ui.label("Edit");
 
             if ui.button("Room").clicked() {
                 // Set the tool type to room
-                self.tool = Tool::CellPainter(AreaType::Room);
+                self.tool = Tool::CellPainter(Area::Room);
             }
 
             if ui.button("Nothing").clicked() {
                 // Set the tool type to nothing
-                self.tool = Tool::CellPainter(AreaType::Nothing);
+                self.tool = Tool::CellPainter(Area::Nothing);
             }
 
             if ui.button("Entrance").clicked() {
                 // Set the tool type to Entrance
-                self.tool = Tool::CellPainter(AreaType::Entrance);
+                self.tool = Tool::CellPainter(Area::Entrance);
             }
         });
 
-        let mut cursor_pos: Option<(usize, usize)> = None;
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let cell_size = 20.0;
@@ -234,23 +295,28 @@ impl eframe::App for RpgMapGui {
 
                         // TODO: Refactor this into an into() call.
                         let color = match self.map.get_cell_ref(point).area() {
-                            AreaType::Room => egui::Color32::LIGHT_GRAY,
-                            AreaType::Entrance => egui::Color32::RED,
-                            AreaType::Nothing => egui::Color32::DARK_GRAY,
+                            Area::Room => self.colors.room,
+                            Area::Entrance => self.colors.entrance,
+                            Area::Nothing => self.colors.nothing,
                         };
 
                         ui.painter().rect_filled(cell.rect, 0.0, color);
 
-                        // Draw the grid
-                        ui.painter().rect_stroke(
-                            cell.rect,
-                            0.0,
-                            egui::Stroke::new(1.0, egui::Color32::BLACK),
-                        );
-
                         // Test if we're hovering over the cell
-                        if cell.rect.contains(ctx.pointer_hover_pos().unwrap_or_default()) {
+                        if cell
+                            .rect
+                            .contains(ctx.pointer_hover_pos().unwrap_or_default())
+                        {
                             cursor_pos = Some((x, y));
+                            // We don't draw the highlight here because it will be overwritten
+                            // but the surrounding cell grids. We'll draw it after the loop.
+                        } else {
+                            // Draw the grid for all cells that aren't the highlighted one
+                            ui.painter().rect_stroke(
+                                cell.rect,
+                                0.0,
+                                egui::Stroke::new(1.0, self.colors.grid),
+                            );
                         }
 
                         // If the mouse main button is down then we may need to
@@ -272,6 +338,24 @@ impl eframe::App for RpgMapGui {
                             }
                         }
                     }
+                }
+
+                if let Some((x, y)) = cursor_pos {
+                    let cell_x = scroll_offset.x + x as f32 * cell_size;
+                    let cell_y = scroll_offset.y + y as f32 * cell_size;
+
+                    let cell = ui.allocate_rect(
+                        egui::Rect::from_min_size(
+                            egui::pos2(cell_x, cell_y),
+                            egui::vec2(cell_size, cell_size),
+                        ),
+                        egui::Sense::drag(), // "click_and_drag" has latency
+                    );
+                    ui.painter().rect_stroke(
+                        cell.rect,
+                        0.0,
+                        egui::Stroke::new(1.0, self.colors.grid_highlight),
+                    );
                 }
             });
         });
