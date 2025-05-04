@@ -368,6 +368,13 @@ impl GridMap {
         i == 0 || i == self.xmax - 1 || j == 0 || j == self.ymax - 1
     }
 
+    /// Determine if we can "anneal" a cell.
+    ///
+    /// "Annealing" means that we're updating the state of the cell according to a rule simllar to
+    /// Conway's Game of Life. We look at the cell's neighbours and whether enough of them
+    /// are also room cells. If they are, then the cell will be converted to a room cell. If not,
+    /// then it will be converted into a Nothing cell. On a larger scale, this results in the
+    /// formation of blobs that look like caves.
     fn cave_anneal_cell(&self, i: usize, j: usize) -> bool {
         if !self.on_edge(i, j) {
             let mut neighbours = 0;
@@ -388,6 +395,11 @@ impl GridMap {
         }
     }
 
+    /// Perform one round of cell annealing on the map.
+    ///
+    /// This method goes through the map and updates every cell according to the rule defined
+    /// in cave_anneal_cell(). When the map starts from random cells, this method will cause
+    /// the cells to form into blobs that look like caves.
     fn generate_cave_iteration(&mut self) {
         let mut tmp_map = self.cells.to_vec();
 
@@ -405,6 +417,9 @@ impl GridMap {
     }
 
     /// Clear away small, unattached rooms.
+    ///
+    /// The whole map is checked for rooms that are smaller than a certain size. If a room is too small
+    /// then it is removed from the map. This reduces the visual noise of the map.
     fn remove_orphans(&mut self) {
         let mut size;
         for i in 0..self.xmax {
@@ -459,6 +474,10 @@ impl GridMap {
         size
     }
 
+    /// Given a starting point for a non-Nothing cells remove all connected cells of that type.
+    ///
+    /// This method starts from a cell and floods outward to remove all
+    /// connected cells that are not Nothing.
     fn clear_room(&mut self, point: impl Into<Point>) {
         let (x, y): (usize, usize) = point.into().try_into().unwrap();
         if self.cells[x][y].area == Area::Nothing {
@@ -483,6 +502,9 @@ impl GridMap {
         }
     }
 
+    /// Generate a cave-like map
+    ///
+    /// This method will replace the existing map.
     pub fn generate_cave(&mut self, iter: i64, seed_limit: i64) {
         // Makes a random selection of cells
         self.generate_random_cells(seed_limit);
