@@ -60,7 +60,7 @@ impl Room {
             for their_cell in other.iter_cells() {
                 // Bunch of casting since we've used usize for the indices but
                 // the internal subtraction can be negative.
-                let this_distance = our_cell.distance2(&their_cell);
+                let this_distance = our_cell.distance2(their_cell);
 
                 if this_distance > best_distance {
                     continue;
@@ -77,6 +77,12 @@ impl Room {
 
     pub fn iter_cells(&self) -> impl Iterator<Item = &Point> {
         self.cells.iter()
+    }
+}
+
+impl Default for Room {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

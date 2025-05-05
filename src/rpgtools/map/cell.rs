@@ -101,11 +101,11 @@ mod tests {
         let mut cell = Cell::new();
         // Do checks
         cell.area = Area::Nothing;
-        assert_eq!(true, cell.is_empty());
+        assert!(cell.is_empty());
         cell.area = Area::Entrance;
-        assert_eq!(false, cell.is_empty());
+        assert!(!cell.is_empty());
         cell.area = Area::Room;
-        assert_eq!(false, cell.is_empty());
+        assert!(!cell.is_empty());
     }
 
     #[test]
@@ -113,10 +113,10 @@ mod tests {
         let mut cell = Cell::new();
         // Do checks
         cell.area = Area::Nothing;
-        assert_eq!(false, cell.is_room());
+        assert!(!cell.is_room());
         cell.area = Area::Entrance;
-        assert_eq!(true, cell.is_room());
+        assert!(cell.is_room());
         cell.area = Area::Room;
-        assert_eq!(true, cell.is_room());
+        assert!(cell.is_room());
     }
 }

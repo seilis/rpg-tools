@@ -138,8 +138,8 @@ impl GridMap {
     /// Arguments:
     ///  *   (x, y) -> The origin of the room. This will be a corner.
     ///  *   (w, h) -> Width/Height of the room. Note, they're isize because
-    ///               you can specify the w/h to be left OR right of the origin
-    ///               and up OR down, respectively.
+    ///      you can specify the w/h to be left OR right of the origin
+    ///      and up OR down, respectively.
     pub fn place_room_dimensions(&mut self, point: impl Into<Point>, (w, h): (isize, isize)) -> Result<()> {
         let (x, y): (usize, usize) = point.into().try_into()?;
         let x_lower = if w >= 0 { x } else { x - w as usize };
@@ -409,12 +409,12 @@ impl GridMap {
     fn generate_cave_iteration(&mut self) {
         let mut tmp_map = self.cells.to_vec();
 
-        for i in 0..self.xmax {
-            for j in 0..self.ymax {
+        for (i, column) in tmp_map.iter_mut().enumerate().take(self.xmax) {
+            for (j, cell) in column.iter_mut().enumerate().take(self.ymax) {
                 if self.cave_anneal_cell(i, j) {
-                    tmp_map[i][j].area = Area::Room;
+                    cell.area = Area::Room;
                 } else {
-                    tmp_map[i][j].area = Area::Nothing;
+                    cell.area = Area::Nothing;
                 }
             }
         }
