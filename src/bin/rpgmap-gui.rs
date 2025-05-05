@@ -245,6 +245,10 @@ impl eframe::App for RpgMapGui {
                     }
                 });
             }
+            Some(Dialog::Save) => {
+            }
+            Some(Dialog::Load) => {
+            }
             _ => {}
         }
 
