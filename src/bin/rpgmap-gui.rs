@@ -1,5 +1,6 @@
 //! Program for making simple RPG maps. This is the Rust language implementation.
 use clap::{command, value_parser, Arg};
+use eframe::egui::{Style, Visuals};
 
 use rpgtools::error::Result;
 use rpgtools::map::Area;
@@ -109,7 +110,14 @@ fn main() -> Result<()> {
     eframe::run_native(
         "RPG Map",
         options,
-        Box::new(|_cc| Ok(Box::new(RpgMapGui::new(map)))),
+        Box::new(|creation_context| {
+            let style = Style {
+                visuals: Visuals::light(),
+                ..Style::default()
+            };
+            creation_context.egui_ctx.set_style(style);
+            Ok(Box::new(RpgMapGui::new(map)))
+        }),
     )?;
 
     Ok(())
@@ -261,7 +269,7 @@ impl eframe::App for RpgMapGui {
 
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let cell_size = 20.0;
+            let cell_size = 10.0;
 
             let (num_x, num_y) = self.map.get_limits();
 
@@ -326,16 +334,14 @@ impl eframe::App for RpgMapGui {
                                 .rect
                                 .contains(ctx.pointer_hover_pos().unwrap_or_default())
                         {
-                            if let Tool::CellPainter(ref area) = &self.tool {
-                                self.map.get_cell_mut(point).set_area(area.to_owned());
-                            }
+                            let Tool::CellPainter(ref area) = &self.tool;
+                            self.map.get_cell_mut(point).set_area(area.to_owned());
                         } else if ui
                             .interact(cell.rect, egui::Id::new(point), egui::Sense::click())
                             .clicked()
                         {
-                            if let Tool::CellPainter(ref area) = &self.tool {
-                                self.map.get_cell_mut(point).set_area(area.to_owned());
-                            }
+                            let Tool::CellPainter(ref area) = &self.tool;
+                            self.map.get_cell_mut(point).set_area(area.to_owned());
                         }
                     }
                 }
