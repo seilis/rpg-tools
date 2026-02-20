@@ -338,13 +338,13 @@ impl eframe::App for RpgMapGui {
                                 .rect
                                 .contains(ctx.pointer_hover_pos().unwrap_or_default())
                         {
-                            let Tool::CellPainter(ref area) = &self.tool;
+                            let Tool::CellPainter(area) = &self.tool;
                             self.map.get_cell_mut(point).set_area(area.to_owned());
                         } else if ui
                             .interact(cell.rect, egui::Id::new(point), egui::Sense::click())
                             .clicked()
                         {
-                            let Tool::CellPainter(ref area) = &self.tool;
+                            let Tool::CellPainter(area) = &self.tool;
                             self.map.get_cell_mut(point).set_area(area.to_owned());
                         }
                     }

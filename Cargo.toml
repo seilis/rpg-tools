@@ -2,7 +2,7 @@
 name        = "rpgtools"
 version     = "1.4.0"
 authors     = ["Aaron Seilis <aaron.seilis@seilis.ca>"]
-edition     = "2021"
+edition     = "2024"
 description = "Collection of utilities to help run tabletop role-playing games"
 repository  = "https://github.com/seilis/rpg-tools"
 readme      = "README.md"
