@@ -57,8 +57,9 @@ impl Renderer {
 
                 if self.map.get_cell_ref((x, y)).area == Area::Room {
                     let mut sprite = self.get_floor_sprite().expect("failed to open file");
-                    let mut rng = thread_rng();
-                    let dist = rand::distributions::Uniform::new_inclusive(0, 3);
+                    let mut rng = rand::rng();
+                    let dist = rand::distr::Uniform::new_inclusive(0, 3)
+                        .expect("could not make distribution");
                     for _ in 0..rng.sample(dist) {
                         sprite = rotate90(&sprite);
                     }
@@ -125,8 +126,8 @@ impl Renderer {
 
     /// Get a floor sprite as an RGBA image
     fn get_floor_sprite(&self) -> Result<RgbaImage, std::io::Error> {
-        let mut rng = thread_rng();
-        let dist = rand::distributions::Uniform::new_inclusive(0, 1);
+        let mut rng = rand::rng();
+        let dist = rand::distr::Uniform::new_inclusive(0, 1).expect("could not make distribution");
         let sample = rng.sample(dist);
 
         if sample < self.assets.len() {

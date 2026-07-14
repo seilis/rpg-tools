@@ -252,7 +252,7 @@ impl GridMap {
         }
 
         // Now pick a random room
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         // If we found a room then we need to make a copy of the value
         // that's found there. x.choose() returns a reference and not
         // the value itself.
@@ -263,10 +263,10 @@ impl GridMap {
     /// between 1 and 100. This limit sets the chance that the cells are a room.
     /// Higher limit means fewer rooms.
     pub fn generate_random_cells(&mut self, limit: i64) {
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for i in 0..self.xmax {
             for j in 0..self.ymax {
-                let val = rng.gen_range(1..100);
+                let val = rng.random_range(1..100);
                 if val > limit {
                     self.cells[i][j].area = Area::Room;
                 } else {
@@ -297,15 +297,15 @@ impl GridMap {
     /// Place a randomly sized room of up to scale length or width.
     pub fn place_random_room(&mut self, scale: usize, connect: bool) {
         // Initialize a random number generator
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Generate size of the room
-        let width = rng.gen_range(2..scale);
-        let height = rng.gen_range(2..scale);
+        let width = rng.random_range(2..scale);
+        let height = rng.random_range(2..scale);
 
         // Generate the origin (location) of the room
-        let x0 = rng.gen_range(1..self.xmax);
-        let y0 = rng.gen_range(1..self.ymax);
+        let x0 = rng.random_range(1..self.xmax);
+        let y0 = rng.random_range(1..self.ymax);
         let point0: Point = (x0, y0).try_into().unwrap();
 
         // See if we need to connect the room to an existing one.
