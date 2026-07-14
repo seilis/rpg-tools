@@ -6,7 +6,6 @@ use std::ops::Index;
 
 // Extern crates
 use rand::prelude::*;
-use rand::{thread_rng, Rng};
 
 use itertools::Itertools;
 
