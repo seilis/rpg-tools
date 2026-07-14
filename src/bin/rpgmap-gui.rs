@@ -115,7 +115,7 @@ fn main() -> Result<()> {
                 visuals: Visuals::light(),
                 ..Style::default()
             };
-            creation_context.egui_ctx.set_style(style);
+            creation_context.egui_ctx.set_global_style(style);
             Ok(Box::new(RpgMapGui::new(map)))
         }),
     )?;
@@ -195,12 +195,12 @@ impl RpgMapGui {
 }
 
 impl eframe::App for RpgMapGui {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         // Save the current position of the cursor for further checks
         let mut cursor_pos: Option<(usize, usize)> = None;
 
-        egui::TopBottomPanel::top("menu").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+        egui::Panel::top("menu").show(ui, |ui| {
+            egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Save").clicked() {
                         // TODO: SAVE!
@@ -235,7 +235,7 @@ impl eframe::App for RpgMapGui {
 
         match self.dialog {
             Some(Dialog::Quit) => {
-                let _modal = egui::Modal::new("Confirm Quit".into()).show(ctx, |ui| {
+                let _modal = egui::Modal::new("Confirm Quit".into()).show(ui, |ui| {
                     ui.label("Are you sure you want to quit?");
                     if ui.button("Yes").clicked() {
                         std::process::exit(0);
@@ -252,7 +252,7 @@ impl eframe::App for RpgMapGui {
             _ => {}
         }
 
-        egui::SidePanel::left("edit_widgets").show(ctx, |ui| {
+        egui::Panel::left("edit_widgets").show(ui, |ui| {
             ui.label("Edit");
 
             if ui.button("Room").clicked() {
@@ -272,7 +272,7 @@ impl eframe::App for RpgMapGui {
         });
 
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             let cell_size = 10.0;
 
             let (num_x, num_y) = self.map.get_limits();
@@ -281,7 +281,7 @@ impl eframe::App for RpgMapGui {
                 let scroll_offset = ui.cursor().left_top();
 
                 // Figure out if we're clicking in this region
-                ctx.input(|input| {
+                ui.input(|input| {
                     if input.pointer.primary_down() {
                         self.dragging = true;
                     }
@@ -317,7 +317,7 @@ impl eframe::App for RpgMapGui {
                         // Test if we're hovering over the cell
                         if cell
                             .rect
-                            .contains(ctx.pointer_hover_pos().unwrap_or_default())
+                            .contains(ui.pointer_hover_pos().unwrap_or_default())
                         {
                             cursor_pos = Some((x, y));
                             // We don't draw the highlight here because it will be overwritten
@@ -327,7 +327,8 @@ impl eframe::App for RpgMapGui {
                             ui.painter().rect_stroke(
                                 cell.rect,
                                 0.0,
-                                egui::Stroke::new(1.0, self.colors.grid),
+                                egui::Stroke::new(1.0f32, self.colors.grid),
+                                egui::StrokeKind::Middle,
                             );
                         }
 
@@ -336,7 +337,7 @@ impl eframe::App for RpgMapGui {
                         if self.dragging
                             && cell
                                 .rect
-                                .contains(ctx.pointer_hover_pos().unwrap_or_default())
+                                .contains(ui.pointer_hover_pos().unwrap_or_default())
                         {
                             let Tool::CellPainter(area) = &self.tool;
                             self.map.get_cell_mut(point).set_area(area.to_owned());
@@ -364,13 +365,14 @@ impl eframe::App for RpgMapGui {
                     ui.painter().rect_stroke(
                         cell.rect,
                         0.0,
-                        egui::Stroke::new(1.0, self.colors.grid_highlight),
+                        egui::Stroke::new(1.0f32, self.colors.grid_highlight),
+                        egui::StrokeKind::Middle,
                     );
                 }
             });
         });
 
-        egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
+        egui::Panel::bottom("status").show(ui, |ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if let Some((x, y)) = cursor_pos {
                     ui.label(format!("Cell: ({}, {})", x, y));
