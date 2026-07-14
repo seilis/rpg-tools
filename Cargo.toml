@@ -15,7 +15,7 @@ clap      = {version = "^4.5.60", features = ["cargo"]}
 eframe    = "^0.35.0"
 egui      = "^0.35.0"
 image     = "^0.25.5"
-itertools = "^0.14.0"
+itertools = "^0.15.0"
 rand      = "^0.8.5"
 resvg     = "^0.44.0"
 thiserror = "^2.0.9"
